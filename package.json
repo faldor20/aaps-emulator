@@ -22,5 +22,11 @@
   "type": "module",
   "dependencies": {
     "svelte-tweakpane-ui": "^1.3.3"
+  },
+  "overrides": {
+    "svelte-tweakpane-ui": {
+      "svelte": "^5.0.0-next.*"
+    }
   }
+  
 }
