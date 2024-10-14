@@ -22,7 +22,7 @@
 <Slider label="SMB Delivery Ratio" min={0.1} max={1.0} step={0.1} bind:value={profileState.smb_delivery_ratio} />
 <Slider label="SMB Delivery Ratio Min" min={0.1} max={1.0} step={0.1} bind:value={profileState.smb_delivery_ratio_min} />
 <Slider label="SMB Delivery Ratio Max" min={0.5} max={1.0} step={0.1} bind:value={profileState.smb_delivery_ratio_max} />
-<Slider label="SMB Delivery Ratio BG Range" min={0.0} max={100} step={1} bind:value={profileState.smb_delivery_ratio_bg_range} />
+<Slider label="SMB Delivery Rati`o BG Range" min={0.0} max={100} step={1} bind:value={profileState.smb_delivery_ratio_bg_range} />
 <Slider label="SMB Max Range Extension" min={1.0} max={5.0} step={0.1} bind:value={profileState.smb_max_range_extension} />
 </Folder >
 <Slider label="Auto ISF max" min={0} max={5} bind:value={profileState.autoISF_max} />

@@ -57,20 +57,16 @@ export function parseBolusData(logContent: string): BolusData[] {
 export function parseDetermineBasalData(logContent: string): DetermineBasalData[] {
 	const results: DetermineBasalData[] = [];
 	const startSequence = '>>> Invoking determine_basal <<<';
-	let startIndex = 0;
-
-	while (true) {
-		startIndex = logContent.indexOf(startSequence, startIndex);
-		if (startIndex === -1) break;
-
-		const endIndex = logContent.indexOf(startSequence, startIndex + 1);
-		const relevantContent = endIndex !== -1
-			? logContent.slice(startIndex, endIndex)
-			: logContent.slice(startIndex);
-
-		startIndex += startSequence.length;
-
-		const lines = relevantContent.split('\n');
+	const lines = logContent.split('\n');
+	let idx= 0;
+try{
+	while (idx<lines.length) {
+		const line= lines[idx];
+		const hasStart=line.includes(startSequence);
+		if(!hasStart){
+			idx++;
+			continue;
+		}
 
 		const result = {
 			glucoseStatus: {} as GlucoseStatus,
@@ -85,37 +81,69 @@ export function parseDetermineBasalData(logContent: string): DetermineBasalData[
 			currentTime: 0,
 			flatBGsDetected: false,
 		};
+		function parser ( prefix:string){
+			return ()=>{
+			while(idx<lines.length){
+				const parts=lines[idx].split(prefix);
+				idx++;
+				if(parts.length>2  ){
+					throw Error(`this line isn't parsing correctly, saw more than two parts when split on ${prefix}\nline:${line}`)
+				}
+				if (parts.length<2){
+					continue;
+				}
+				return parts[1].trim()
+			}
+				throw Error("out of lines");	
+			}
+			}
+			function jsonParser(prefix:string){
+			const parse=parser(prefix) ;
+				return ()=>
+				JSON.parse(parse());
+			}
+			
 
-		const extractGlucoseStatus = (line: string) => JSON.parse(line.split('Glucose status:')[1].trim());
-		const extractIobData = (line: string) => JSON.parse(line.split('IOB data:')[1].trim());
-		const extractCurrentTemp = (line: string) => JSON.parse(line.split('Current temp:')[1].trim());
-		const extractProfile = (line: string) => JSON.parse(line.split('Profile:')[1].trim());
-		const extractMealData = (line: string) => JSON.parse(line.split('Meal data:')[1].trim());
-		const extractAutosensData = (line: string) => JSON.parse(line.split('Autosens data:')[1].trim());
-		const extractReservoirData = (line: string) => {
-			const data = line.split('Reservoir data:')[1].trim();
+		const extractGlucoseStatus =jsonParser('Glucose status:');
+		const extractIobData =jsonParser('IOB data:')
+		const extractCurrentTemp =jsonParser('Current temp:')
+		const extractProfile =jsonParser('Profile:')
+		const extractMealData =jsonParser('Meal data:')
+		const extractAutosensData =jsonParser('Autosens data:')
+		const extractReservoirData = () => {
+			const parse=parser('Reservoir data:');
+			const data=parse()
 			return data !== 'undefined' ? Number.parseFloat(data) : undefined;
 		};
-		const extractMicroBolusAllowed = (line: string) => line.split('MicroBolusAllowed:')[1].trim() === 'true';
-		const extractSmbAlwaysAllowed = (line: string) => line.split('SMBAlwaysAllowed:')[1].trim() === 'true';
-		const extractCurrentTime = (line: string) => Number.parseInt(line.split('CurrentTime:')[1].trim(), 10);
-		const extractFlatBGsDetected = (line: string) => line.split('flatBGsDetected:')[1].trim() === 'true';
+		const extractMicroBolusAllowed =jsonParser('MicroBolusAllowed:');
+		const extractSmbAlwaysAllowed =jsonParser('SMBAlwaysAllowed:');
+		const extractCurrentTime = () => Number.parseInt(parser('CurrentTime:')(), 10);
+		const extractFlatBGsDetected =jsonParser('flatBGsDetected:');
 
-		if (lines[1]) result.glucoseStatus = extractGlucoseStatus(lines[1]);
-		if (lines[2]) result.iobData = extractIobData(lines[2]);
-		if (lines[3]) result.currentTemp = extractCurrentTemp(lines[3]);
-		if (lines[4]) result.profile = extractProfile(lines[4]);
-		if (lines[5]) result.mealData = extractMealData(lines[5]);
-		if (lines[6]) result.autosensData = extractAutosensData(lines[6]);
-		if (lines[7]) result.reservoirData = extractReservoirData(lines[7]);
-		if (lines[8]) result.microBolusAllowed = extractMicroBolusAllowed(lines[8]);
-		if (lines[9]) result.smbAlwaysAllowed = extractSmbAlwaysAllowed(lines[9]);
-		if (lines[10]) result.currentTime = extractCurrentTime(lines[10]);
-		if (lines[11]) result.flatBGsDetected = extractFlatBGsDetected(lines[11]);
+		result.glucoseStatus = extractGlucoseStatus();
+		result.iobData = extractIobData();
+		result.currentTemp = extractCurrentTemp();
+		result.profile = extractProfile();
+		result.mealData = extractMealData();
+		result.autosensData = extractAutosensData();
+		result.reservoirData = extractReservoirData();
+		result.microBolusAllowed = extractMicroBolusAllowed();
+		result.smbAlwaysAllowed = extractSmbAlwaysAllowed();
+		result.currentTime = extractCurrentTime();
+		result.flatBGsDetected = extractFlatBGsDetected();
 
 		results.push(result);
-		startIndex += startSequence.length;
+		
 	}
 
+
 	return results;
+	}
+	catch(e){
+		if(e?.message==="out of lines"){
+			return results;
+		}
+		throw e;
+		
+	}
 }

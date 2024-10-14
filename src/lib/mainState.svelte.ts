@@ -1,5 +1,5 @@
 import { parseBolusData, parseDetermineBasalData } from "./readaapslog";
-import type { AutoISFProfile, BgUnits, BolusData, DetermineBasalData, DetermineBasalResultWithTime } from "./types";
+import type { AutoISFProfile,  BolusData, DetermineBasalData, DetermineBasalResultWithTime } from "./types";
 import { determineBasalUseProfileUnits } from "./aaps/determineBasal";
 
 function parseLog(log: string) {
@@ -17,7 +17,7 @@ function generateResults(steps: DetermineBasalData[]): DetermineBasalResultWithT
         console.log(
             `Time taken for determineBasal: ${endTime - startTime} milliseconds`,
         );
-        return { ...result, currentTime: new Date(data.glucoseStatus.date),is_mgdl:data.profile.out_units==="mg/dL" };
+        return { ...result, currentTime: new Date(data.glucoseStatus.date),is_mg_dl:data.profile.out_units!=="mmol/L" };
     });
 }
 
@@ -26,7 +26,7 @@ export class AapsStateManager {
     overriddenStep: DetermineBasalData | undefined = $state(undefined);
     steps: DetermineBasalData[] = $state([]);
     bolusData: BolusData[] = $state([]);
-    bgUnits: BgUnits = $state("mmol/L");
+    is_mg_dl:boolean=$state(true);
 
     profileOverride: AutoISFProfile | undefined = $derived.by(()=>{
         if (this.profileOverrideConfig) {
@@ -61,7 +61,7 @@ export class AapsStateManager {
 
         this.steps = steps;
         this.bolusData = bolusData;
-        this.bgUnits = steps[0]?.profile.out_units as BgUnits || "mmol/L";
+        this.is_mg_dl= steps[0]?.profile.out_units !== "mmol/L" ;
     }
 
 }

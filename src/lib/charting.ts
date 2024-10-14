@@ -17,7 +17,7 @@ let options: EChartsOption & { series?: SeriesOption[], dataset?: DatasetOption[
 let result_data: DetermineBasalResultWithTime[] = []
 let chartResultData = []
 
-let predictions: prediction.Predictions = {};
+const predictions: prediction.Predictions = {};
 
 function makeLabelwithStalk(label: string, width: number, stalkLength: number) {
     const stalk = '|\n'.padStart(width/2-1,' ').repeat(stalkLength);
@@ -110,11 +110,12 @@ export function resultDataSource(results: DetermineBasalResultWithTime[]): Datas
 let drag_position = { time: null, bg: null };
 
 
-export function main_chart_options({ results, bolusData, bgUnits, chart, aapsState }: ChartData): EChartsOption {
+export function main_chart_options({ results, bolusData, is_mg_dl, chart, aapsState }: ChartData): EChartsOption {
 
 
     const bolus_data = bolusData.filter(b => b.type !== "SMB").map(b => ({ time: new Date(b.timestamp).toISOString(), units: b.amount }));
     const smb_data = bolusData.filter(b => b.type === "SMB").map(b => ({ time: new Date(b.timestamp).toISOString(), units: b.amount }));
+    const bg_units=is_mg_dl? "mg/dL": "mmol/L";
 
     chart.on('finished', () => window.dispatchEvent(new Event('echarts.finished')));
     //TOOD: THis is obviously a hack...
@@ -181,13 +182,13 @@ export function main_chart_options({ results, bolusData, bgUnits, chart, aapsSta
 
         yAxis: [{
             type: 'value',
-            name: bgUnits,
+            name: bg_units,
             min: 0,
-            max: bgUnits === "mg/dL" ? 300 : 20,
+            max: is_mg_dl ? 300 : 20,
 
             position: 'left',
             axisLabel: {
-                formatter: '{value} ' + bgUnits
+                formatter: `{value} ${bg_units}`
             }
         },
         {

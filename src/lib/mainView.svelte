@@ -40,7 +40,7 @@
         //TODO: fix this
         //@ts-ignore
         myChart=inited;
-        let opts=main_chart({ results: aapsState.results, bolusData: aapsState.bolusData, bgUnits: aapsState.bgUnits, chart:myChart as EChartsType,aapsState });
+        let opts=main_chart({ results: aapsState.results, bolusData: aapsState.bolusData, chart:myChart as EChartsType,aapsState,is_mg_dl:aapsState.is_mg_dl });
         chartOptions=opts.options;
         onclick=opts.onclick;
         inited.setOption(opts.options);

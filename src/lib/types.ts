@@ -61,7 +61,7 @@ export type AutoISFProfile = {
     enableSMB_EvenOn_OddOff_always: boolean;
     iob_threshold_percent: number;
     profile_percentage: number;
-    out_units: string;
+    out_units?: string;
     recentSteps5Minutes: number;
     recentSteps10Minutes: number;
     recentSteps15Minutes: number;
@@ -146,7 +146,7 @@ export type DetermineBasalResult = {
 }
 export type DetermineBasalResultWithTime = DetermineBasalResult & {
     currentTime: Date;
-    is_mgdl: boolean;
+    is_mg_dl: boolean;
 }
 
 export type PredBGs = {
@@ -178,8 +178,7 @@ export type BolusData = {
 export type ChartData = {
     results: DetermineBasalResultWithTime[];
     bolusData: BolusData[];
-    bgUnits: BgUnits;
     chart:echarts.EChartsType;
+    is_mg_dl:boolean;
     aapsState: AapsStateManager;
 }
-export type BgUnits = "mmol/L" | "mg/dL";

@@ -13,7 +13,7 @@ type PredictionDataObject = {
     autoISF_msg: string,
     reason: string,
     startTime: Date,
-    is_mgdl: boolean
+    is_mg_dl: boolean
 }
 export type Predictions=Record<number,PredictionDataObject>
 
@@ -45,10 +45,10 @@ function getPredictionData(results: DetermineBasalResultWithTime[], startTime: D
             return acc;
         }, [])
         .join(', ');
-    return { iobData, ztData, uamData, reason: formattedReason, autoISF_msg: latestResults?.autoISF_msg ?? '', startTime,is_mgdl:latestResults?.is_mgdl ?? false };
+    return { iobData, ztData, uamData, reason: formattedReason, autoISF_msg: latestResults?.autoISF_msg ?? '', startTime,is_mg_dl:latestResults?.is_mg_dl ?? false };
 }
 
-function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime,is_mgdl,reason }: PredictionDataObject): EChartsOption {
+function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime,is_mg_dl,reason }: PredictionDataObject): EChartsOption {
     const dateUnix = startTime.getTime();
     return {
         dataset: [
@@ -79,7 +79,7 @@ function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime
                 markPoint: {
                     data: [{
                         name: 'coordinate',
-                        coord: [startTime.toISOString(), (is_mgdl ? (startTime.getUTCMinutes() % 15 === 0 ? 200 : 150) : (startTime.getUTCMinutes() % 15 === 0 ? 16 : 12))]
+                        coord: [startTime.toISOString(), (is_mg_dl ? (startTime.getUTCMinutes() % 15 === 0 ? 200 : 150) : (startTime.getUTCMinutes() % 15 === 0 ? 16 : 12))]
                     },],
                     label: {
                         formatter: function (params) {
