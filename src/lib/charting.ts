@@ -17,7 +17,7 @@ let options: EChartsOption & { series?: SeriesOption[], dataset?: DatasetOption[
 let result_data: DetermineBasalResultWithTime[] = []
 let chartResultData = []
 
-let predictions:prediction.Predictions={};
+let predictions: prediction.Predictions = {};
 
 export function main_chart(chartData: ChartData) {
     result_data = chartData.results;
@@ -27,9 +27,9 @@ export function main_chart(chartData: ChartData) {
     return {
         options: options_ret,
         onNewResults: (results: DetermineBasalResultWithTime[]) => {
-            const dataset=resultDataSource(results);
-            chart.setOption({dataset:[dataset]});
-            prediction.updatePredictions(predictions,chart,results,new Date());
+            const dataset = resultDataSource(results);
+            chart.setOption({ dataset: [dataset] });
+            prediction.updatePredictions(predictions, chart, results, new Date());
         },
         onclick: ({ detail }: CustomEvent<ECMouseEvent>) => {
             if (chart) {
@@ -38,10 +38,10 @@ export function main_chart(chartData: ChartData) {
                 const date = new Date(time);
                 const dateunix = date.getTime();
                 if (predictions[dateunix]) {
-                    prediction.removePrediction(predictions,chart, dateunix);
+                    prediction.removePrediction(predictions, chart, dateunix);
                 }
-                else{
-                    prediction.setPrediction(predictions,chart, result_data, date);
+                else {
+                    prediction.setPrediction(predictions, chart, result_data, date);
                 }
             }
 
@@ -62,6 +62,7 @@ export function resultDataSource(results: DetermineBasalResultWithTime[]): Datas
 
     };
 }
+let drag_position = { time: null, bg: null };
 
 
 export function main_chart_options({ results, bolusData, bgUnits, chart, aapsState }: ChartData): EChartsOption {
@@ -70,6 +71,18 @@ export function main_chart_options({ results, bolusData, bgUnits, chart, aapsSta
     const bolus_data = bolusData.filter(b => b.type !== "SMB").map(b => ({ time: new Date(b.timestamp).toISOString(), units: b.amount }));
     const smb_data = bolusData.filter(b => b.type === "SMB").map(b => ({ time: new Date(b.timestamp).toISOString(), units: b.amount }));
 
+    chart.on('finished', () => window.dispatchEvent(new Event('echarts.finished')));
+    //TOOD: THis is obviously a hack...
+    let updateTimer: number | null = null;
+    window.addEventListener('echarts.finished', () => {
+        if (updateTimer !== null) {
+            clearTimeout(updateTimer);
+        }
+        updateTimer = setTimeout(() => {
+            updateDragPosition(chart);
+            updateTimer = null;
+        }, 500);
+    });
     options = {
 
         animationDuration: 300,
@@ -259,10 +272,12 @@ export function main_chart_options({ results, bolusData, bgUnits, chart, aapsSta
         ],
         graphic: [
             {
+                id: 'drag-handle',
                 type: 'group',
                 left: '10%',
                 bottom: '1%',
                 draggable: true,
+
 
                 ondrag: function (this, e) {
                     let x = e.offsetX;
@@ -277,13 +292,20 @@ export function main_chart_options({ results, bolusData, bgUnits, chart, aapsSta
                     this.x = x2;
                     //@ts-ignore
                     this.y = y2;
+                    drag_position.time = closest.currentTime.getTime();
+                    drag_position.bg = -1;
 
                     console.log(time);
                 },
                 ondragend: function (this, e) {
-                    let x = e.offsetX;
-                    let y = e.offsetY;
+
+                    updateDragPosition(chart);
+                    
+                    const x=e.offsetX;
+                    const y=e.offsetY;
+
                     const [time, bg] = chart.convertFromPixel({ seriesId: "bg-data" }, [x, y]);
+
                     const closest = results.reduce((prev, curr) => {
                         return (Math.abs(curr.currentTime.getTime() - time) < Math.abs(prev.currentTime.getTime() - time) ? curr : prev);
                     });
@@ -340,4 +362,26 @@ export function main_chart_options({ results, bolusData, bgUnits, chart, aapsSta
         ]
     }
     return options;
+}
+
+
+function updateDragPosition(chart: EChartsType | undefined) {
+    if (chart && drag_position.time && drag_position.bg) {
+        console.log("updateDragPosition", drag_position.time, drag_position.bg);
+        const res = chart.convertToPixel({ seriesId: "bg-data" }, [drag_position.time, drag_position.bg]);
+        if (res) {
+            const [x, y] = res;
+            chart.setOption({
+                graphic: [
+                    {
+                        id: 'drag-handle',
+                        x,
+                        y,
+                        left: null,
+                        bottom: null
+                    }
+                ]
+            });
+        }
+    }
 }
