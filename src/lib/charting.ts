@@ -19,6 +19,49 @@ let chartResultData = []
 
 let predictions: prediction.Predictions = {};
 
+function makeLabelwithStalk(label: string, width: number, stalkLength: number) {
+    const stalk = '|\n'.padStart(width/2-1,' ').repeat(stalkLength);
+    return `${stalk}${label}`;
+}
+function setAdjustedSmbs(chart:EChartsType,results: DetermineBasalResultWithTime[]){
+    const smb_data = results.filter(b => (b.units??0)>0).map(b => ({ time: b.deliverAt.toISOString(), units: b.units }));
+    chart.setOption({
+        dataset: [
+            {
+                dimensions: ['time', { name: 'units', type: 'number' }],
+                id: "adjusted-smb-data",
+                source: smb_data
+
+            }
+        ],
+        series: [
+            {
+                id: "adjusted-smb-data",
+                name: 'Adjusted SMB',
+                type: 'scatter',
+                symbol: 'triangle',
+                color: 'lightblue',
+                symbolSize: function (data) {
+                    return Math.min(20, 5 + data.units * 20); // Scale between 5 and 20
+                },
+                encode: {
+                    x: 'time',
+                    y: 'units',
+                },
+                yAxisId: 'units',
+                datasetId: "adjusted-smb-data",
+                label: {
+                    show: true,
+                    formatter: makeLabelwithStalk('{@units} U', 10, 12),
+                    position: 'below',
+                    color: '#29a674',
+
+                    
+                }
+            }
+        ]
+    });
+}
 export function main_chart(chartData: ChartData) {
     result_data = chartData.results;
     const options_ret = main_chart_options(chartData);
@@ -30,6 +73,8 @@ export function main_chart(chartData: ChartData) {
             const dataset = resultDataSource(results);
             chart.setOption({ dataset: [dataset] });
             prediction.updatePredictions(predictions, chart, results, new Date());
+            setAdjustedSmbs(chart,results);
+            
         },
         onclick: ({ detail }: CustomEvent<ECMouseEvent>) => {
             if (chart) {
@@ -262,13 +307,27 @@ export function main_chart_options({ results, bolusData, bgUnits, chart, aapsSta
                 yAxisId: 'units',
                 datasetId: "smb-data",
                 id: "smb-data",
+                z: 100,
                 label: {
+                 
                     show: true,
-                    formatter: '{@units} U',
-                    position: 'top'
+                    formatter: makeLabelwithStalk('{@units} U',5,6),
+                    position: 'bottom',
+                    color: 'blue'
+
                 }
             }
 
+        ],
+        dataZoom: [
+            {
+                type: 'slider',
+                start: 0,
+                end: 100,
+                handleStyle: {
+                    color: 'blue'
+                }
+            }
         ],
         graphic: [
             {

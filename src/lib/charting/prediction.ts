@@ -11,6 +11,7 @@ type PredictionDataObject = {
     ztData: PredictionData[],
     uamData: PredictionData[],
     autoISF_msg: string,
+    reason: string,
     startTime: Date,
     is_mgdl: boolean
 }
@@ -37,10 +38,17 @@ function getPredictionData(results: DetermineBasalResultWithTime[], startTime: D
     const iobData = predictionToData('bg_prediction_iob', trimmedPredBGs.IOB, startTime);
     const ztData = predictionToData('bg_prediction_zt', trimmedPredBGs.ZT, startTime);
     const uamData = predictionToData('bg_prediction_uam', trimmedPredBGs.UAM, startTime);
-    return { iobData, ztData, uamData, autoISF_msg: latestResults?.autoISF_msg ?? '', startTime,is_mgdl:latestResults?.is_mgdl ?? false };
+    const formattedReason = latestResults?.reason?.split(',')
+        .reduce((acc:string[], item:string, index:number) => {
+            acc.push(item.trim());
+            if ((index + 1) % 5 === 0) acc.push('\n');
+            return acc;
+        }, [])
+        .join(', ');
+    return { iobData, ztData, uamData, reason: formattedReason, autoISF_msg: latestResults?.autoISF_msg ?? '', startTime,is_mgdl:latestResults?.is_mgdl ?? false };
 }
 
-function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime,is_mgdl }: PredictionDataObject): EChartsOption {
+function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime,is_mgdl,reason }: PredictionDataObject): EChartsOption {
     const dateUnix = startTime.getTime();
     return {
         dataset: [
@@ -75,7 +83,7 @@ function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime
                     },],
                     label: {
                         formatter: function (params) {
-                            return autoISF_msg.trim();
+                            return autoISF_msg.trim() + "\n"+"-------------------------------"+ "\n" + reason.trim();
                         },
                         backgroundColor: 'rgb(242,242,242)',
                         borderColor: '#aaa',

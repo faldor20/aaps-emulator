@@ -142,6 +142,7 @@ export type DetermineBasalResult = {
     IOB: number;
     reason: string;
     autoISF_msg: string;
+    units?: number;
 }
 export type DetermineBasalResultWithTime = DetermineBasalResult & {
     currentTime: Date;

@@ -1,4 +1,4 @@
-import type { AutoISFProfile, GlucoseStatus, CurrentTemp, IobData, AutoSensData, MealData, DetermineBasalResult, DetermineBasalData } from "../lib/types";
+import type { AutoISFProfile, GlucoseStatus, CurrentTemp, IobData, AutoSensData, MealData, DetermineBasalResult, DetermineBasalData } from "../types";
 import {  determine_basal as determineBasalJS } from "./determine-basal.mjs";
 
 export function determineBasalWrapper(
