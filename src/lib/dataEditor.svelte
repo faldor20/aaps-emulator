@@ -16,7 +16,8 @@
 <Slider label="Auto ISF max" min={0} max={5} bind:value={profileState.autoISF_max} />
 <Slider label="Auto ISF min" min={0} max={1} bind:value={profileState.autoISF_min} />
 <Slider label="target" min={0} max={300} bind:value={profileState.target_bg} />
-<Button label="Save" on:click={()=>{
+<Button title="Recalculate" on:click={()=>{
     onDataSaved($state.snapshot(profileState));
 }} />
+
 </div>
