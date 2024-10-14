@@ -5,19 +5,30 @@
   import { onMount } from "svelte";
   let aapsState: AapsStateManager | undefined = undefined;
   onMount(async () => {
-    //fetch the static log
-    const log = await fetch("/log.log").then((r) => r.text());
-
-    aapsState = new AapsStateManager(log);
    
   });
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const log = e.target.result as string;
+        aapsState = new AapsStateManager(log);
+      };
+      reader.readAsText(file);
+    }
+  };
 </script>
 
 <div class="app">
   {#if aapsState}
     <MainView {aapsState} />
   {:else}
-    <p>Error loading log file</p>
+    <div>
+        <p>Please select a log file:</p>
+        <input type="file" accept=".log" on:change={handleFileSelect} />
+    </div>
   {/if}
 
 </div>
