@@ -1,9 +1,11 @@
 <script lang="ts">
+    import { importedLog, initializeAapsState, results } from "$lib/mainState";
 
-  import { AapsStateManager  } from "$lib/mainState.svelte";
+
+
     import MainView from "$lib/mainView.svelte";
   import { onMount } from "svelte";
-  let aapsState: AapsStateManager | undefined = undefined;
+
   onMount(async () => {
    
   });
@@ -14,7 +16,7 @@
       const reader = new FileReader();
       reader.onload = (e) => {
         const log = e.target.result as string;
-        aapsState = new AapsStateManager(log);
+        initializeAapsState(log);
       };
       reader.readAsText(file);
     }
@@ -22,8 +24,8 @@
 </script>
 
 <div class="app">
-  {#if aapsState}
-    <MainView {aapsState} />
+  {#if $importedLog}
+    <MainView  />
   {:else}
     <div>
         <p>Please select a log file:</p>

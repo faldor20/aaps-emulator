@@ -1,4 +1,3 @@
-import type { AapsStateManager } from "./mainState.svelte.ts";
 
 export type GlucoseValue = {
     timestamp: string;
@@ -176,9 +175,8 @@ export type BolusData = {
     isBasalInsulin: boolean;
 }
 export type ChartData = {
-    results: DetermineBasalResultWithTime[];
-    bolusData: BolusData[];
-    chart:echarts.EChartsType;
-    is_mg_dl:boolean;
-    aapsState: AapsStateManager;
+     results:  DetermineBasalResultWithTime[];
+     bolusData:  BolusData[];
+     chart:  echarts.EChartsType;
+     is_mg_dl:  boolean;
 }

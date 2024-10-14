@@ -40,9 +40,8 @@ export function convert_bg(value:number, profile:AutoISFProfile)
     {
         return round(value / 18.018, 2)
     }
-    else
-    {
-        return Math.round(value);
+    else {
+    return Math.round(value);
     }
 }
 
@@ -67,5 +66,13 @@ export function determineBasalUseProfileUnits(determineBasalData: DetermineBasal
 }
 
 export function determineBasal(determineBasalData: DetermineBasalData): DetermineBasalResult {
-  return determineBasalWrapper(determineBasalData.glucoseStatus, determineBasalData.currentTemp, determineBasalData.iobData, determineBasalData.profile, determineBasalData.autosensData, determineBasalData.mealData, tempBasalFunctions, determineBasalData.microBolusAllowed, determineBasalData.reservoirData, determineBasalData.currentTime, determineBasalData.flatBGsDetected);
+  //Determinbasal outputs a ton of logging garbage so we will divert all logs here
+  // const oldErrorLog=console.error;
+  // console.error=()=>{}
+  // const oldLog=console.error;
+  // console.log=()=>{}
+ const result=determineBasalWrapper(determineBasalData.glucoseStatus, determineBasalData.currentTemp, determineBasalData.iobData, determineBasalData.profile, determineBasalData.autosensData, determineBasalData.mealData, tempBasalFunctions, determineBasalData.microBolusAllowed, determineBasalData.reservoirData, determineBasalData.currentTime, determineBasalData.flatBGsDetected);
+//  console.error=oldErrorLog;
+//  console.log=oldLog;
+ return result
 }

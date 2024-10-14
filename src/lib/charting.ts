@@ -6,15 +6,13 @@ import type { EChartsOption, EChartsType, SeriesOption } from 'echarts';
 import type { GlucoseValue, DetermineBasalResult, DetermineBasalResultWithTime, BolusData, ChartData } from './types.ts';
 import type { ECMouseEvent } from './charts/events.ts';
 import type { DatasetOption } from 'echarts/types/dist/shared';
-
+import { overriddenStep, results, steps } from './mainState';
 import * as prediction from './charting/prediction';
 // now with tree-shaking
 use([GraphicComponent, GridComponent, CanvasRenderer, TitleComponent, LineChart, DatasetComponent, TooltipComponent, DataZoomComponent, AxisPointerComponent, LegendComponent, ScatterChart, MarkPointComponent])
 
 let options: EChartsOption & { series?: SeriesOption[], dataset?: DatasetOption[] };
 
-
-let result_data: DetermineBasalResultWithTime[] = []
 let chartResultData = []
 
 const predictions: prediction.Predictions = {};
@@ -23,7 +21,7 @@ function makeLabelwithStalk(label: string, width: number, stalkLength: number) {
     const stalk = '|\n'.padStart(width/2-1,' ').repeat(stalkLength);
     return `${stalk}${label}`;
 }
-function setAdjustedSmbs(chart:EChartsType,results: DetermineBasalResultWithTime[]){
+function setAdjustedSmbs(chart:EChartsType,results: readonly DetermineBasalResultWithTime[]){
     const smb_data = results.filter(b => (b.units??0)>0).map(b => ({ time: b.deliverAt.toISOString(), units: b.units }));
     chart.setOption({
         dataset: [
@@ -63,19 +61,19 @@ function setAdjustedSmbs(chart:EChartsType,results: DetermineBasalResultWithTime
     });
 }
 export function main_chart(chartData: ChartData) {
-    result_data = chartData.results;
+
     const options_ret = main_chart_options(chartData);
     const { chart } = chartData;
-
+    results.listen((results:readonly DetermineBasalResultWithTime[]) => {
+        const dataset = resultDataSource(results);
+        chart.setOption({ dataset: [dataset] });
+        prediction.updatePredictions(predictions, chart, results, new Date());
+        setAdjustedSmbs(chart,results);
+        
+    });
     return {
         options: options_ret,
-        onNewResults: (results: DetermineBasalResultWithTime[]) => {
-            const dataset = resultDataSource(results);
-            chart.setOption({ dataset: [dataset] });
-            prediction.updatePredictions(predictions, chart, results, new Date());
-            setAdjustedSmbs(chart,results);
-            
-        },
+        
         onclick: ({ detail }: CustomEvent<ECMouseEvent>) => {
             if (chart) {
                 //@ts-ignore
@@ -86,7 +84,7 @@ export function main_chart(chartData: ChartData) {
                     prediction.removePrediction(predictions, chart, dateunix);
                 }
                 else {
-                    prediction.setPrediction(predictions, chart, result_data, date);
+                    prediction.setPrediction(predictions, chart, chartData.results as DetermineBasalResultWithTime[], date);
                 }
             }
 
@@ -95,8 +93,7 @@ export function main_chart(chartData: ChartData) {
 }
 
 
-export function resultDataSource(results: DetermineBasalResultWithTime[]): DatasetOption {
-    result_data = results;
+export function resultDataSource(results: readonly DetermineBasalResultWithTime[]): DatasetOption {
     chartResultData = results.map(r => ({ time: r.currentTime.toISOString(), bg: r.bg, iob: r.IOB, target: r.targetBG, variable_sens: r.variable_sens, reason: r.reason, eventualBG: r.eventualBG }));
 
     return {
@@ -110,7 +107,7 @@ export function resultDataSource(results: DetermineBasalResultWithTime[]): Datas
 let drag_position = { time: null, bg: null };
 
 
-export function main_chart_options({ results, bolusData, is_mg_dl, chart, aapsState }: ChartData): EChartsOption {
+export function main_chart_options({ results, bolusData, is_mg_dl, chart }: ChartData): EChartsOption {
 
 
     const bolus_data = bolusData.filter(b => b.type !== "SMB").map(b => ({ time: new Date(b.timestamp).toISOString(), units: b.amount }));
@@ -135,7 +132,7 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart, aapsSt
         // animation:false,
         // animationDelay:100,
         dataset: [
-            resultDataSource(result_data),
+            resultDataSource(results),
             {
                 dimensions: ['time', { name: 'units', type: 'number' }],
                 source: bolus_data,
@@ -370,10 +367,10 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart, aapsSt
                         return (Math.abs(curr.currentTime.getTime() - time) < Math.abs(prev.currentTime.getTime() - time) ? curr : prev);
                     });
                     const closestTime = closest.currentTime.getTime();
-                    const closestStep = aapsState.steps.reduce((prev, curr) => {
+                    const closestStep = steps.get().reduce((prev, curr) => {
                         return ((curr.currentTime - closestTime) < Math.abs(prev.currentTime - closestTime) ? curr : prev);
                     });
-                    aapsState.overriddenStep = closestStep;
+                    overriddenStep.set(closestStep);
                 },
 
                 children: [

@@ -3,8 +3,7 @@
     import type { AutoISFProfile } from './types';
     let {profile,onDataSaved}:{profile:AutoISFProfile,onDataSaved:(profile:AutoISFProfile)=>void} = $props();
     
-    let profileState= $state($state.snapshot(profile));
-    
+    let profileState=$state(profile);
 
 </script>
   
@@ -40,6 +39,7 @@
 <Slider label="target" min={0} max={300} bind:value={profileState.target_bg} />
 </Folder>
 <Button title="Recalculate" on:click={()=>{
+    console.log("clicked recalculate");
     onDataSaved($state.snapshot(profileState));
 }} />
 

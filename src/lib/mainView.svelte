@@ -7,27 +7,21 @@
     import type { ECMouseEvent } from "$lib/charts/events";
     import type { EChartsType } from "echarts";
     import DataEditor from "$lib/dataEditor.svelte";
-    import type { AapsStateManager } from "$lib/mainState.svelte";
-    import type { DetermineBasalResultWithTime } from "./types";
   
-    const {aapsState}: {aapsState:AapsStateManager} = $props();
-    
+    import { overriddenStep,profileOverride, profileOverrideConfig, results,bolusData, is_mg_dl } from "./mainState";
+  
+    import * as nano from "nanostores";
     let chartOptions: any = $state({});
     let onclick: ( event: CustomEvent<ECMouseEvent>) => void;
-    let onNewResults: (results: DetermineBasalResultWithTime[]) => void=()=>{};
     let myChart: EChartsType|undefined=$state(undefined);
-    let showDataEditor= $derived.by(
-      ()=>aapsState.overriddenStep&&aapsState.profileOverride!==undefined);
+
+    let showDataEditor= nano.computed([overriddenStep,profileOverride],
+    (overriddenStep,profileOverride)=>overriddenStep&&profileOverride!==undefined);
   
     onMount(async () => {
       
     });
-    $effect(() => {
-      $inspect(aapsState.profileOverride);
-      $inspect(aapsState.results);
-    // myChart?.setOption({dataset:[resultDataSource(aapsState.results)]});
-    onNewResults(aapsState.results);
-  });
+
   </script>
 
   
@@ -40,11 +34,10 @@
         //TODO: fix this
         //@ts-ignore
         myChart=inited;
-        let opts=main_chart({ results: aapsState.results, bolusData: aapsState.bolusData, chart:myChart as EChartsType,aapsState,is_mg_dl:aapsState.is_mg_dl });
+        let opts=main_chart({ results: results.get(), bolusData: bolusData.get(), chart: myChart, is_mg_dl: is_mg_dl.get() });
         chartOptions=opts.options;
         onclick=opts.onclick;
         inited.setOption(opts.options);
-        onNewResults=opts.onNewResults;
         return inited;
         }
       }
@@ -53,9 +46,10 @@
       on:mousedown={(event) => console.log("mousedown:", event)}
     />
     </div>
-    {#if showDataEditor && aapsState.profileOverride}
-      <DataEditor profile={aapsState.profileOverride} onDataSaved={(profile)=>{
-        aapsState.profileOverrideConfig=profile;
+    {#if showDataEditor && $profileOverride}
+      <DataEditor profile={$profileOverride} onDataSaved={(profile)=>{
+        console.log("altered profile saved",profile);
+        profileOverrideConfig.set(profile);
       }} />
     {/if}
   </div>

@@ -24,7 +24,7 @@ function predictionToData(name: string, values: number[], startTime: Date) {
     });
 }
 
-function getPredictionData(results: DetermineBasalResultWithTime[], startTime: Date): PredictionDataObject {
+function getPredictionData(results: readonly DetermineBasalResultWithTime[], startTime: Date): PredictionDataObject {
 
     const latestResults = results.find(r => r.currentTime.getTime() === startTime.getTime());
     const predBGs = latestResults?.predBGs;
@@ -162,7 +162,7 @@ export function removePrediction(predictions:Predictions, chart: EChartsType, pr
  * @param results 
  * @param startTime 
  */
-export function setPrediction(predictions:Predictions,chart:EChartsType,results:DetermineBasalResultWithTime[],startTime:Date){
+export function setPrediction(predictions:Predictions,chart:EChartsType,results:readonly DetermineBasalResultWithTime[],startTime:Date){
     const prediction=getPredictionData(results,startTime);
     const predictionOptions=createPredictionData(prediction);
     chart.setOption(predictionOptions);
@@ -177,7 +177,7 @@ export function setPrediction(predictions:Predictions,chart:EChartsType,results:
  * @param results 
  * @param startTime 
  */
-export function updatePredictions(predictions:Predictions,chart:EChartsType,results:DetermineBasalResultWithTime[],startTime:Date){
+export function updatePredictions(predictions:Predictions,chart:EChartsType,results:readonly DetermineBasalResultWithTime[],startTime:Date){
     Object.values(predictions).forEach(p=>{
     setPrediction(predictions,chart,results,p.startTime);
 

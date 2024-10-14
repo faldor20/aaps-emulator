@@ -6,6 +6,6 @@
   outputs = { flakelight, ... }@inputs:
     flakelight ./. {
       inherit inputs;
-      devShell.packages = pkgs: [ pkgs.pnpm pkgs.nodejs_22   ];
+      devShell.packages = pkgs: [ pkgs.pnpm pkgs.nodejs_22 pkgs.nodePackages.prettier   ];
     };
 }

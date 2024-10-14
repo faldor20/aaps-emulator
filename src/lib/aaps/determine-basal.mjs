@@ -1039,7 +1039,6 @@ export function determine_basal(glucose_status, currenttemp, iob_data, profile, 
 
     var COBpredBG = bg;
     var UAMpredBG = bg;
-    const predictionStartTime = performance.now();
     try {
         iobArray.forEach(function(iobTick) {
             //console.error(iobTick);
@@ -1116,7 +1115,6 @@ export function determine_basal(glucose_status, currenttemp, iob_data, profile, 
         console.error("Problem with iobArray.  Optional feature Advanced Meal Assist disabled");
     }
     const predictionEndTime = performance.now();
-    console.log(`Time taken for prediction: ${predictionEndTime - predictionStartTime} milliseconds`);
     if (meal_data.mealCOB) {
         console.error("predCIs (mg/dL/5m):",predCIs.join(" "));
         console.error("remainingCIs:      ",remainingCIs.join(" "));
