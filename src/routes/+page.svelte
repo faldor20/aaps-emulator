@@ -10,12 +10,12 @@
    
   });
 
-  const handleFileSelect = (event) => {
+  const handleFileSelect = (event:any) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const log = e.target.result as string;
+        const log = e.target?.result as string;
         initializeAapsState(log);
       };
       reader.readAsText(file);

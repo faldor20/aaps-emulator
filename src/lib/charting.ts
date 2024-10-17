@@ -2,10 +2,10 @@ import { init, use } from 'echarts/core'
 import { BarChart, LineChart, ScatterChart } from 'echarts/charts'
 import { GridComponent, TitleComponent, DatasetComponent, TooltipComponent, DataZoomComponent, AxisPointerComponent, LegendComponent, MarkPointComponent, GraphicComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
-import type { EChartsOption, EChartsType, SeriesOption } from 'echarts';
+
 import type { GlucoseValue, DetermineBasalResult, DetermineBasalResultWithTime, BolusData, ChartData } from './types.ts';
 import type { ECMouseEvent } from './charts/events.ts';
-import type { DatasetOption } from 'echarts/types/dist/shared';
+import type { DatasetOption, EChartsOption, EChartsType, SeriesOption } from 'echarts/types/dist/shared';
 import { overriddenStep, results, steps } from './mainState';
 import * as prediction from './charting/prediction';
 // now with tree-shaking
@@ -39,7 +39,7 @@ function setAdjustedSmbs(chart:EChartsType,results: readonly DetermineBasalResul
                 type: 'scatter',
                 symbol: 'triangle',
                 color: 'lightblue',
-                symbolSize: function (data) {
+                symbolSize: function (data:any) {
                     return Math.min(20, 5 + data.units * 20); // Scale between 5 and 20
                 },
                 encode: {
@@ -104,7 +104,7 @@ export function resultDataSource(results: readonly DetermineBasalResultWithTime[
 
     };
 }
-let drag_position = { time: null, bg: null };
+let drag_position = { time: 0, bg: 0 };
 
 
 export function main_chart_options({ results, bolusData, is_mg_dl, chart }: ChartData): EChartsOption {

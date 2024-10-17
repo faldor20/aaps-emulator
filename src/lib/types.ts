@@ -1,3 +1,5 @@
+import type { EChartsType } from "echarts/types/dist/shared";
+
 
 export type GlucoseValue = {
     timestamp: string;
@@ -177,6 +179,6 @@ export type BolusData = {
 export type ChartData = {
      results:  DetermineBasalResultWithTime[];
      bolusData:  BolusData[];
-     chart:  echarts.EChartsType;
+     chart:  EChartsType;
      is_mg_dl:  boolean;
 }

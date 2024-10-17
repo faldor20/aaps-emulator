@@ -34,7 +34,7 @@
         //TODO: fix this
         //@ts-ignore
         myChart=inited;
-        let opts=main_chart({ results: results.get(), bolusData: bolusData.get(), chart: myChart, is_mg_dl: is_mg_dl.get() });
+        let opts=main_chart({ results: results.get(), bolusData: bolusData.get(), chart: inited, is_mg_dl: is_mg_dl.get() });
         chartOptions=opts.options;
         onclick=opts.onclick;
         inited.setOption(opts.options);

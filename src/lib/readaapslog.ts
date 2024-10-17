@@ -139,8 +139,8 @@ try{
 
 	return results;
 	}
-	catch(e){
-		if(e?.message==="out of lines"){
+	catch(e:any){
+		if(e?.message ==="out of lines"){
 			return results;
 		}
 		throw e;

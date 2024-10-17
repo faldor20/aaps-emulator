@@ -1,4 +1,4 @@
-import type { EChartsType, EChartsOption} from "echarts";
+import type { EChartsType, EChartsOption} from "echarts/types/dist/shared";
 import type { DetermineBasalResultWithTime } from "../types.ts";
 import type { DatasetOption,SeriesOption } from "echarts/types/dist/shared";
 
@@ -45,7 +45,7 @@ function getPredictionData(results: readonly DetermineBasalResultWithTime[], sta
             return acc;
         }, [])
         .join(', ');
-    return { iobData, ztData, uamData, reason: formattedReason, autoISF_msg: latestResults?.autoISF_msg ?? '', startTime,is_mg_dl:latestResults?.is_mg_dl ?? false };
+    return { iobData, ztData, uamData, reason: formattedReason??'', autoISF_msg: latestResults?.autoISF_msg ?? '', startTime,is_mg_dl:latestResults?.is_mg_dl ?? false };
 }
 
 function createPredictionData({ iobData, ztData, uamData, autoISF_msg, startTime,is_mg_dl,reason }: PredictionDataObject): EChartsOption {
