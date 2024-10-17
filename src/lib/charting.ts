@@ -94,11 +94,11 @@ export function main_chart(chartData: ChartData) {
 
 
 export function resultDataSource(results: readonly DetermineBasalResultWithTime[]): DatasetOption {
-    chartResultData = results.map(r => ({ time: r.currentTime.toISOString(), bg: r.bg, iob: r.IOB, target: r.targetBG, variable_sens: r.variable_sens, reason: r.reason, eventualBG: r.eventualBG }));
+    chartResultData = results.map(r => ({ time: r.currentTime.toISOString(), bg: r.bg, iob: r.IOB, emulated_iob: r.emulated_iob, activity:r.activity, target: r.targetBG, variable_sens: r.variable_sens, reason: r.reason, eventualBG: r.eventualBG }));
 
     return {
 
-        dimensions: ['time', { name: 'bg', type: 'number' }, { name: 'iob', type: 'number' }, { name: 'target', type: 'number' }, { name: 'variable_sens', type: 'number' }, { name: 'eventualBG', type: 'number' }],
+        dimensions: ['time', { name: 'bg', type: 'number' }, { name: 'iob', type: 'number' }, { name: 'emulated_iob', type: 'number' }, { name: 'activity', type: 'number' },{ name: 'target', type: 'number' }, { name: 'variable_sens', type: 'number' }, { name: 'eventualBG', type: 'number' }],
         source: chartResultData,
         id: "result-data",
 
@@ -252,6 +252,33 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
                 datasetId: "result-data",
                 symbol: 'none',
                 smooth: true
+            },
+            {
+                name: 'Emulated IOB',
+                id: "emulated-iob-data",
+                type: 'line',
+                color: 'blue',
+                encode: {
+                    x: 'time',
+                    y: 'emulated_iob',
+                },
+                yAxisId: 'units',
+                datasetId: "result-data",
+                symbol: 'none',
+                smooth: true,
+                lineStyle: {
+                    type: 'dotted'
+                }
+            },
+            {name:"Insulin activity",
+            type:'line',
+            color:'orange',
+            encode:{
+                x:'time',
+                y:'activity',
+            },
+            yAxisId:'units',
+            datasetId:"result-data",
             },
             {
                 name: 'Target',

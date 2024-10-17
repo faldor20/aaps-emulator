@@ -144,6 +144,8 @@ export type DetermineBasalResult = {
     reason: string;
     autoISF_msg: string;
     units?: number;
+    rate?: number;
+    duration?: number;
 }
 export type DetermineBasalResultWithTime = DetermineBasalResult & {
     currentTime: Date;

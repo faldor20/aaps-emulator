@@ -51,7 +51,7 @@ function convertBgWrapper(value:number,profile:AutoISFProfile){
 const tempBasalFunctions = {
   getMaxSafeBasal: (profile: AutoISFProfile) => 0,
   setTempBasal: (rate: number, duration: number, profile: AutoISFProfile, result: DetermineBasalResult, currentTemp: CurrentTemp) => 
-    result
+    {return {...result, rate,duration}}
 }
 export function determineBasalUseProfileUnits(determineBasalData: DetermineBasalData): DetermineBasalResult {
   let result = determineBasal(determineBasalData);

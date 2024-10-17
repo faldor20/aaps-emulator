@@ -25,7 +25,7 @@ function predictionToData(name: string, values: number[], startTime: Date) {
 }
 
 function getPredictionData(results: readonly DetermineBasalResultWithTime[], startTime: Date): PredictionDataObject {
-
+    startTime=new Date(startTime);
     const latestResults = results.find(r => r.currentTime.getTime() === startTime.getTime());
     const predBGs = latestResults?.predBGs;
     const minLength = Math.max(20, Math.min(predBGs?.IOB?.length ?? 0, predBGs?.ZT?.length ?? 0, predBGs?.UAM?.length ?? 0));
