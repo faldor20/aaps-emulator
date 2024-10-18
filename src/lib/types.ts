@@ -171,6 +171,7 @@ export type DetermineBasalData =
         currentTime: number;
         flatBGsDetected: boolean;
     }
+
 export type BolusData = {
     id: number;
     timestamp: number;
@@ -179,8 +180,51 @@ export type BolusData = {
     isBasalInsulin: boolean;
 }
 export type ChartData = {
-     results:  DetermineBasalResultWithTime[];
+     results:  EmulationResult[];
      bolusData:  BolusData[];
      chart:  EChartsType;
      is_mg_dl:  boolean;
+}
+
+export type EmulationResult = {
+    og:DetermineBasalResultWithTime;
+    emulated?:DetermineBasalResultWithTime&{activity:number,bgi:number};
+}
+
+   //We don't want to override anything accidentally so we only override the values we expose for editing.
+   export type OverrideProfile={
+    // target_bg:number;
+    bgAccel_ISF_weight:number;
+    pp_ISF_weight:number;
+    lower_ISFrange_weight:number;
+    higher_ISFrange_weight:number;
+    dura_ISF_weight:number;
+    smb_delivery_ratio:number;
+    smb_delivery_ratio_min:number;
+    smb_delivery_ratio_max:number;
+    smb_delivery_ratio_bg_range:number;
+    smb_max_range_extension:number;
+    autoISF_max:number;
+    autoISF_min:number;
+    iob_threshold_percent:number;
+    sens:number;
+}
+export function overrideProfileInit(profile:AutoISFProfile):OverrideProfile{
+    return {
+        // target_bg:profile.target_bg,
+        bgAccel_ISF_weight:profile.bgAccel_ISF_weight,
+        pp_ISF_weight:profile.pp_ISF_weight,
+        lower_ISFrange_weight:profile.lower_ISFrange_weight,
+        higher_ISFrange_weight:profile.higher_ISFrange_weight,
+        dura_ISF_weight:profile.dura_ISF_weight,
+        smb_delivery_ratio:profile.smb_delivery_ratio,
+        smb_delivery_ratio_min:profile.smb_delivery_ratio_min,
+        smb_delivery_ratio_max:profile.smb_delivery_ratio_max,
+        smb_delivery_ratio_bg_range:profile.smb_delivery_ratio_bg_range,
+        smb_max_range_extension:profile.smb_max_range_extension,
+        autoISF_max:profile.autoISF_max,
+        autoISF_min:profile.autoISF_min,
+        iob_threshold_percent:profile.iob_threshold_percent,
+        sens:profile.sens,
+    }
 }

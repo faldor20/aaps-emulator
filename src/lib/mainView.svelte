@@ -8,15 +8,15 @@
     import type { EChartsType } from "echarts";
     import DataEditor from "$lib/dataEditor.svelte";
   
-    import { overriddenStep,profileOverride, profileOverrideConfig, results,bolusData, is_mg_dl } from "./mainState";
+    import { overriddenStep, profileOverrideConfig, results,bolusData, is_mg_dl } from "./mainState";
   
     import * as nano from "nanostores";
     let chartOptions: any = $state({});
     let onclick: ( event: CustomEvent<ECMouseEvent>) => void;
     let myChart: EChartsType|undefined=$state(undefined);
 
-    let showDataEditor= nano.computed([overriddenStep,profileOverride],
-    (overriddenStep,profileOverride)=>overriddenStep&&profileOverride!==undefined);
+    let showDataEditor= nano.computed([overriddenStep,profileOverrideConfig],
+    (overriddenStep,profileOverrideConfig)=>overriddenStep&&profileOverrideConfig!==undefined);
   
     onMount(async () => {
       
@@ -28,13 +28,14 @@
   <div class="main-view">
     <div class="chart">
     <Chart 
+      
       bind:chart={myChart}  
       init={(element,theme,initOptions)=>{
         const inited=init(element,theme);
         //TODO: fix this
         //@ts-ignore
         myChart=inited;
-        let opts=main_chart({ results: results.get(), bolusData: bolusData.get(), chart: inited, is_mg_dl: is_mg_dl.get() });
+        let opts=main_chart({ results: results.get(), bolusData: bolusData.get(), chart: myChart, is_mg_dl: is_mg_dl.get() });
         chartOptions=opts.options;
         onclick=opts.onclick;
         inited.setOption(opts.options);
@@ -46,8 +47,8 @@
       on:mousedown={(event) => console.log("mousedown:", event)}
     />
     </div>
-    {#if showDataEditor && $profileOverride}
-      <DataEditor profile={$profileOverride} onDataSaved={(profile)=>{
+    {#if showDataEditor && $overriddenStep}
+      <DataEditor profile={($overriddenStep).profile} onDataSaved={(profile)=>{
         console.log("altered profile saved",profile);
         profileOverrideConfig.set(profile);
       }} />
@@ -61,10 +62,14 @@
     height: 100%;
     overflow: visible;
     flex-direction: row;
+    flex-wrap: wrap;
     display: flex;
   }
   .chart{
-    width: 80vw;
+    flex:1;
+    min-width: 80%;
+    max-width: 100%;
+    min-height: 90%;
 
   }
 </style>

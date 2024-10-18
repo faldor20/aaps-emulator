@@ -1,16 +1,35 @@
 <script lang="ts">
-    import { Button, Slider,Folder } from 'svelte-tweakpane-ui';
-    import type { AutoISFProfile } from './types';
-    let {profile,onDataSaved}:{profile:AutoISFProfile,onDataSaved:(profile:AutoISFProfile)=>void} = $props();
-    
-    let profileState=$state(profile);
 
+    import { Button, Slider,Folder } from 'svelte-tweakpane-ui';
+    import { overrideProfileInit, type AutoISFProfile, type OverrideProfile } from './types';
+    let {profile,onDataSaved}:{profile:AutoISFProfile,onDataSaved:(profile:OverrideProfile)=>void} = $props();
+    
+    let profileState:OverrideProfile=$state(overrideProfileInit(profile));
+
+    let debounceTimer: number | undefined;
+
+    $effect(() => {
+        const currentProfileState = $state.snapshot(profileState);
+        
+        clearTimeout(debounceTimer);
+        
+        debounceTimer = setTimeout(() => {
+            onDataSaved(currentProfileState);
+        }, 500);
+
+        return () => {
+            clearTimeout(debounceTimer);
+        };
+    });
 </script>
   
-<div>
-
+<div class="data-editor">
+    <Button title="Reset settings" on:click={()=>{
+        console.log("clicked reset settings");
+        profileState= overrideProfileInit(profile);
+    }} />
+<!--TODO: make a way for this to be undefined so that it won't override the profiel and we don't have to stop emulatino when the orgiinal value in the profile changes-->
 <Slider label="BG Accel ISF Weight" min={0} max={1} bind:value={profileState.bgAccel_ISF_weight} />
-<Slider label="BG brake ISF Weight" min={0} max={1} bind:value={profileState.bgBrake_ISF_weight} />
 <Slider label="PP ISF Weight" min={0} max={1} bind:value={profileState.pp_ISF_weight} />
 
 <Slider label="Lower ISF Range Weight" min={0} max={2} step={0.1} bind:value={profileState.lower_ISFrange_weight} />
@@ -36,7 +55,7 @@
 <Folder title="Non Autoisf">
 <Slider label="ISF" min={0} max={300} bind:value={profileState.sens} />
 
-<Slider label="target" min={0} max={300} bind:value={profileState.target_bg} />
+<!-- <Slider label="target" min={0} max={300} bind:value={profileState.target_bg} /> -->
 </Folder>
 <Button title="Recalculate" on:click={()=>{
     console.log("clicked recalculate");
@@ -44,3 +63,5 @@
 }} />
 
 </div>
+<style>
+</style>

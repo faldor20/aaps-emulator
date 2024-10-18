@@ -146,9 +146,9 @@ export function removePrediction(predictions:Predictions, chart: EChartsType, pr
     const options = chart.getOption() as EChartsOption;
     if (Array.isArray(options.dataset) && Array.isArray(options.series)) {
 
-        options.dataset = options.dataset?.filter((d: DatasetOption) => !(d.id as string ?? "").startsWith(predictionStartTime.toString())) ?? [];
+        options.dataset = options.dataset?.filter((d: DatasetOption|null) => !(d?.id as string ?? "").startsWith(predictionStartTime.toString())) ?? [];
         //@ts-ignore
-        options.series = options.series?.filter((s: SeriesOption) => !(s.datasetId as string ?? "").startsWith(predictionStartTime.toString())) ?? [];
+        options.series = options.series?.filter((s: SeriesOption|null) => !(s?.datasetId as string ?? "").startsWith(predictionStartTime.toString())) ?? [];
         chart.setOption({ dataset: options.dataset, series: options.series }, {
             replaceMerge: ['series', 'dataset'],
         });

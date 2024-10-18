@@ -3,7 +3,7 @@ import { BarChart, LineChart, ScatterChart } from 'echarts/charts'
 import { GridComponent, TitleComponent, DatasetComponent, TooltipComponent, DataZoomComponent, AxisPointerComponent, LegendComponent, MarkPointComponent, GraphicComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
-import type { GlucoseValue, DetermineBasalResult, DetermineBasalResultWithTime, BolusData, ChartData } from './types.ts';
+import type { GlucoseValue, DetermineBasalResult, DetermineBasalResultWithTime, BolusData, ChartData, EmulationResult } from './types.ts';
 import type { ECMouseEvent } from './charts/events.ts';
 import type { DatasetOption, EChartsOption, EChartsType, SeriesOption } from 'echarts/types/dist/shared';
 import { overriddenStep, results, steps } from './mainState';
@@ -21,15 +21,14 @@ function makeLabelwithStalk(label: string, width: number, stalkLength: number) {
     const stalk = '|\n'.padStart(width/2-1,' ').repeat(stalkLength);
     return `${stalk}${label}`;
 }
-function setAdjustedSmbs(chart:EChartsType,results: readonly DetermineBasalResultWithTime[]){
-    const smb_data = results.filter(b => (b.units??0)>0).map(b => ({ time: b.deliverAt.toISOString(), units: b.units }));
+function setAdjustedSmbs(chart:EChartsType,results: readonly EmulationResult[]) {
+    const smb_data = results.filter(b => (b.emulated?.units??0)>0).map(b => ({ time: b.emulated?.deliverAt.toISOString(), units: b.emulated?.units }));
     chart.setOption({
         dataset: [
             {
                 dimensions: ['time', { name: 'units', type: 'number' }],
                 id: "adjusted-smb-data",
                 source: smb_data
-
             }
         ],
         series: [
@@ -64,10 +63,10 @@ export function main_chart(chartData: ChartData) {
 
     const options_ret = main_chart_options(chartData);
     const { chart } = chartData;
-    results.listen((results:readonly DetermineBasalResultWithTime[]) => {
+    results.listen((results:readonly EmulationResult[]) => {
         const dataset = resultDataSource(results);
         chart.setOption({ dataset: [dataset] });
-        prediction.updatePredictions(predictions, chart, results, new Date());
+        prediction.updatePredictions(predictions, chart, results.map(r=>r.emulated??r.og), new Date());
         setAdjustedSmbs(chart,results);
     });
     return {
@@ -75,16 +74,27 @@ export function main_chart(chartData: ChartData) {
         
         onclick: ({ detail }: CustomEvent<ECMouseEvent>) => {
             if (chart) {
+                console.log("onclick", detail);
+                let time=null;
+                if (detail?.componentType==="markPoint"){
+                    //@ts-ignore
+                    time=detail?.data?.coord[0];
+                }
+                else{
+                    //@ts-ignore
+                    time=detail?.value?.time;
+                }
+                if (time){
                 //@ts-ignore
-                const time = detail?.value?.time;
                 const date = new Date(time);
                 const dateunix = date.getTime();
                 if (predictions[dateunix]) {
                     prediction.removePrediction(predictions, chart, dateunix);
                 }
                 else {
-                    prediction.setPrediction(predictions, chart, chartData.results as DetermineBasalResultWithTime[], date);
+                    prediction.setPrediction(predictions, chart, chartData.results.map(r=>r.emulated??r.og), date);
                 }
+            }
             }
 
         }
@@ -92,8 +102,8 @@ export function main_chart(chartData: ChartData) {
 }
 
 
-export function resultDataSource(results: readonly DetermineBasalResultWithTime[]): DatasetOption {
-    chartResultData = results.map(r => ({ time: r.currentTime.toISOString(), bg: r.bg, iob: r.IOB, emulated_iob: r.emulated_iob, activity:r.activity, target: r.targetBG, variable_sens: r.variable_sens, reason: r.reason, eventualBG: r.eventualBG }));
+export function resultDataSource(results: readonly EmulationResult[]): DatasetOption {
+    chartResultData = results.map(r => ({ time: r.og.currentTime.toISOString(), bg: r.og.bg, iob: r.og.IOB, emulated_iob: r.emulated?.IOB, activity:r.emulated?.activity, target: r.og.targetBG, variable_sens: r.og.variable_sens, reason: r.og.reason, eventualBG: r.og.eventualBG }));
 
     return {
 
@@ -367,15 +377,15 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
                     let y = e.offsetY;
                     const [time, bg] = chart.convertFromPixel({ seriesId: "bg-data" }, [x, y]);
                     const closest = results.reduce((prev, curr) => {
-                        return (Math.abs(curr.currentTime.getTime() - time) < Math.abs(prev.currentTime.getTime() - time) ? curr : prev);
+                        return (Math.abs(curr.og.currentTime.getTime() - time) < Math.abs(prev.og.currentTime.getTime() - time) ? curr : prev);
                     });
 
-                    const [x2, y2] = chart.convertToPixel({ seriesId: "bg-data" }, [closest.currentTime, -1]);
+                    const [x2, y2] = chart.convertToPixel({ seriesId: "bg-data" }, [closest.og.currentTime, -1]);
                     //@ts-ignore
                     this.x = x2;
                     //@ts-ignore
                     this.y = y2;
-                    drag_position.time = closest.currentTime.getTime();
+                    drag_position.time = closest.og.currentTime.getTime();
                     drag_position.bg = -1;
 
                     console.log(time);
@@ -390,9 +400,9 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
                     const [time, bg] = chart.convertFromPixel({ seriesId: "bg-data" }, [x, y]);
 
                     const closest = results.reduce((prev, curr) => {
-                        return (Math.abs(curr.currentTime.getTime() - time) < Math.abs(prev.currentTime.getTime() - time) ? curr : prev);
+                        return (Math.abs(curr.og.currentTime.getTime() - time) < Math.abs(prev.og.currentTime.getTime() - time) ? curr : prev);
                     });
-                    const closestTime = closest.currentTime.getTime();
+                    const closestTime = closest.og.currentTime.getTime();
                     const closestStep = steps.get().reduce((prev, curr) => {
                         return ((curr.currentTime - closestTime) < Math.abs(prev.currentTime - closestTime) ? curr : prev);
                     });

@@ -62,6 +62,7 @@ export function determineBasalUseProfileUnits(determineBasalData: DetermineBasal
   result.predBGs.ZT = result.predBGs.ZT.map(value => convert_bg(value,determineBasalData.profile));
   result.predBGs.UAM = result.predBGs.UAM?.map(value => convert_bg(value,determineBasalData.profile));
   
+  
   return result;
 }
 

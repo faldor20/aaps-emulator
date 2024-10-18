@@ -1,9 +1,10 @@
 import { parseBolusData, parseDetermineBasalData } from "./readaapslog";
-import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, IobData, IobDataValue } from "./types";
+import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, EmulationResult, IobData, IobDataValue, OverrideProfile } from "./types";
 import { determineBasalUseProfileUnits } from "./aaps/determineBasal";
-import { atom, batched, computed, map } from "nanostores";
+import { atom, batched, computed, map, type ReadableAtom } from "nanostores";
 import { calculateIOB } from "./aaps/iob/calculateIOB";
 import { generate } from "./aaps/iob";
+import { registerUpdateLifecycle } from "echarts";
 
 function parseLog(log: string) {
     return {
@@ -24,24 +25,13 @@ function generateResults(steps: DetermineBasalData[]): DetermineBasalResultWithT
     return res;
 }
 export const importedLog = atom<string | undefined>(undefined);
-export const profileOverrideConfig = atom<AutoISFProfile | undefined>(undefined);
+export const profileOverrideConfig = atom<OverrideProfile | undefined>(undefined);
 export const overriddenStep = atom<DetermineBasalData | undefined>(undefined);
 export const steps = atom<DetermineBasalData[]>([]);
 export const bolusData = atom<BolusData[]>([]);
 export const is_mg_dl = atom(true);
 
 
-
-export const profileOverride = computed([profileOverrideConfig, overriddenStep], (config, step) => {
-    console.log("recalculating profile override");
-    if (config) {
-        return config;
-    } else if (step) {
-        return step.profile;
-    } else {
-        return undefined;
-    }
-});
 
 function generateIOB(treatments: any[], currentTime: Date, profile: {}) {
     const inputs = {
@@ -51,7 +41,7 @@ function generateIOB(treatments: any[], currentTime: Date, profile: {}) {
         // history: treatments.reverse(),
         autosens: undefined
     }
-    const treatments2=treatments.map((treatment)=>{
+    const treatments2 = treatments.map((treatment) => {
         return {
             date: new Date(treatment.created_at),
             started_at: new Date(treatment.created_at),
@@ -114,24 +104,48 @@ function getTreatments(result: DetermineBasalResult) {
 }
 
 
-export const results = computed([steps, overriddenStep, profileOverride], (steps, overriddenStep, profileOverride) => {
+export const results: ReadableAtom<EmulationResult[]> = computed([steps, overriddenStep, profileOverrideConfig], (steps, overriddenStep, profileOverrideConfig) => {
     console.log("recalculating overridden steps");
     const emulated_treatments: any[] = [];
     const og_treatments: any[] = [];
 
-    if (overriddenStep !== undefined && profileOverride !== undefined) {
+    if (overriddenStep !== undefined && profileOverrideConfig !== undefined) {
+        let lastStep: DetermineBasalData | null = null;
+        let shouldOverride = true;
+        let firstStep=true;
+
         return steps.map((step) => {
-            if (step.currentTime >= overriddenStep.currentTime) {
+            let inOverrideRange= step.currentTime >= overriddenStep.currentTime;
+            if (inOverrideRange && !firstStep) {
+                if (lastStep==null){ throw new Error("lastStep is null");}
+                //stop overriding if any of these values change
+                if (profileOverrideConfig.target_bg!==undefined && lastStep?.profile.target_bg !== step.profile.target_bg) {
+                    shouldOverride = false;
+                }
+                if (profileOverrideConfig.bgAccel_ISF_weight!==undefined && lastStep?.profile.bgAccel_ISF_weight !== step.profile.bgAccel_ISF_weight) {
+                    shouldOverride = false;
+                }
+                if (profileOverrideConfig.sens!==undefined && lastStep?.profile.sens !== step.profile.sens) {
+                    shouldOverride = false;
+                }
+            }
+            lastStep = step;
+            if (inOverrideRange && shouldOverride) {
+                firstStep=false;
+               console.log("overriding step", step, "profileOverrideConfig", profileOverrideConfig);
+                //We don't want to override the target bg because it's not a constant.
 
-                const newStep =  JSON.parse(JSON.stringify({ ...step, profile: profileOverride }));
-
-                if (emulated_treatments.length > 0||og_treatments.length > 0) {
+                const newProfile = { ...step.profile, ...profileOverrideConfig };
+                // const newProfile = step.profile;
+                const newStep = JSON.parse(JSON.stringify({ ...step, profile: newProfile }));
+                
+                if (emulated_treatments.length > 0 || og_treatments.length > 0) {
                     console.log("calculating emulated iob");
                     //TOOD: make a real profile
                     let basalProfile = [
                         {
                             minutes: 0,
-                            rate: profileOverride.current_basal
+                            rate: step.profile.current_basal
                         }
                     ]
                     const newIob = calculateEmulatedIOB(basalProfile, new Date(step.iobData[0].time), emulated_treatments);
@@ -141,7 +155,7 @@ export const results = computed([steps, overriddenStep, profileOverride], (steps
                     //TODO: calculte activity properly
                     //TODO: use the activity for the new and original 
                     // iob to calulate the original and current BGimpact then adjust the reading by that amount
-                    
+
                     const differenceIob = newIob
                         .map((newIobItem, index) => {
                             return {
@@ -164,13 +178,13 @@ export const results = computed([steps, overriddenStep, profileOverride], (steps
                             basaliob: iobItem.basaliob + differenceIob[index].basaliob,
                             iob: iobItem.iob + differenceIob[index].iob,
                             // activity: activity,
-                            activity: iobItem.activity+differenceIob[index].activity,
+                            activity: iobItem.activity + differenceIob[index].activity,
                             iobwithzerotemp: {
                                 ...iobItem.iobWithZeroTemp,
                                 iob: iobItem.iobWithZeroTemp?.iob + differenceIob[index].iobwithzerotemp?.iob,
                                 basaliob: iobItem.iobWithZeroTemp?.basaliob + differenceIob[index].iobwitactivityhzerotemp?.basaliob,
                                 // activity: activityZeroTemp,
-                                activity: iobItem.iobWithZeroTemp?.activity+differenceIob[index].iobwithzerotemp?.activity,
+                                activity: iobItem.iobWithZeroTemp?.activity + differenceIob[index].iobwithzerotemp?.activity,
 
                             }
                         }
@@ -194,17 +208,21 @@ export const results = computed([steps, overriddenStep, profileOverride], (steps
                 console.log("newStep.iobData[0].iob", newStep.iobData[0].iob);
                 console.log("step.iobData[0].iob", step.iobData[0].iob);
                 return {
+                    og:
+                        { ...og_result, currentTime: new Date(step.glucoseStatus.date), is_mg_dl: step.profile.out_units !== "mmol/L" }
+                    ,
+                    emulated:{
                     ...result,
-                    emulated_iob: newStep.iobData[0].iob,
                     activity: newStep.iobData[0].activity,
-                    IOB: step.iobData[0].iob,
+                    bgi: (newStep.iobData[0].activity * result.sensitivityRatio * 5),
 
                     currentTime: new Date(newStep.glucoseStatus.date),
                     is_mg_dl: newStep.profile.out_units !== "mmol/L"
-                };
+                }};
             }
             const result = determineBasalUseProfileUnits(step);
-            return { ...result, currentTime: new Date(step.glucoseStatus.date), is_mg_dl: step.profile.out_units !== "mmol/L" };
+            return {og:{ ...result, currentTime: new Date(step.glucoseStatus.date), is_mg_dl: step.profile.out_units !== "mmol/L" },
+                emulated:undefined};
 
 
 
@@ -212,8 +230,10 @@ export const results = computed([steps, overriddenStep, profileOverride], (steps
         });
     } else {
         return steps.map((step) => {
+            
             const result = determineBasalUseProfileUnits(step);
-            return { ...result, currentTime: new Date(step.glucoseStatus.date), is_mg_dl: step.profile.out_units !== "mmol/L" };
+            return {og:{ ...result, currentTime: new Date(step.glucoseStatus.date), is_mg_dl: step.profile.out_units !== "mmol/L" },
+                emulated:undefined};
         });
     }
 });

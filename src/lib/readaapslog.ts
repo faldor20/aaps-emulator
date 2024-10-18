@@ -26,6 +26,7 @@ export function parseLog(log: string) {
 		.filter((value) => value !== null);
 	return glucoseValues;
 }
+
 export function parseBolusData(logContent: string): BolusData[] {
     const results: BolusData[] = [];
     const lines = logContent.split('\n');
