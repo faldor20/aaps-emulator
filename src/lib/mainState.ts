@@ -113,14 +113,6 @@ function getTreatments(result: DetermineBasalResult) {
     return treatments;
 }
 
-function calcActivity( newIobData:IobDataValue,oldIobData:IobDataValue){
-                 
-    //TODO: do i need to take into account the basal insulin?
-    const totalIob=newIobData.iob+oldIobData.iob;
-    const iobratio=newIobData.iob/totalIob;
-    const activity=(newIobData.activity*iobratio) + (oldIobData.activity*(1-iobratio));
-    return activity;
-}
 
 export const results = computed([steps, overriddenStep, profileOverride], (steps, overriddenStep, profileOverride) => {
     console.log("recalculating overridden steps");
@@ -133,7 +125,7 @@ export const results = computed([steps, overriddenStep, profileOverride], (steps
 
                 const newStep =  JSON.parse(JSON.stringify({ ...step, profile: profileOverride }));
 
-                if (emulated_treatments.length > 0) {
+                if (emulated_treatments.length > 0||og_treatments.length > 0) {
                     console.log("calculating emulated iob");
                     //TOOD: make a real profile
                     let basalProfile = [
@@ -156,33 +148,29 @@ export const results = computed([steps, overriddenStep, profileOverride], (steps
                                 ...newIobItem,
                                 basaliob: newIobItem.basaliob - ogIob[index].basaliob,
                                 iob: newIobItem.iob - ogIob[index].iob,
+                                activity: newIobItem.activity - ogIob[index].activity,
                                 iobwithzerotemp: {
                                     ...newIobItem.iobWithZeroTemp,
                                     iob: newIobItem.iobWithZeroTemp?.iob - ogIob[index].iobWithZeroTemp?.iob,
                                     basaliob: newIobItem.iobWithZeroTemp?.basaliob - ogIob[index].iobWithZeroTemp?.basaliob,
+                                    activity: newIobItem.iobWithZeroTemp?.activity - ogIob[index].iobWithZeroTemp?.activity,
                                 }
                             }
                         })
                     const finalIob = newStep.iobData.map((iobItem, index) => {
-                        //og_activity= 0.8
-                        //new_activity= 0.5
-                        // og_iob= 0.5
-                        //new_iob= 4
-                        //I would want the activity contribution to be proportional the portion of the original iob that the new iob is:
-                        // activity= 
-                        const activity=calcActivity(newIob[index],step.iobData[index]);
-                        const activityZeroTemp=calcActivity(newIob[index].iobWithZeroTemp,step.iobData[index].iobWithZeroTemp);
-                        console.log("activity", activity);
+
                         return {
                             ...iobItem,
                             basaliob: iobItem.basaliob + differenceIob[index].basaliob,
                             iob: iobItem.iob + differenceIob[index].iob,
-                            activity: activity,
+                            // activity: activity,
+                            activity: iobItem.activity+differenceIob[index].activity,
                             iobwithzerotemp: {
                                 ...iobItem.iobWithZeroTemp,
                                 iob: iobItem.iobWithZeroTemp?.iob + differenceIob[index].iobwithzerotemp?.iob,
                                 basaliob: iobItem.iobWithZeroTemp?.basaliob + differenceIob[index].iobwitactivityhzerotemp?.basaliob,
-                                activity: activityZeroTemp,
+                                // activity: activityZeroTemp,
+                                activity: iobItem.iobWithZeroTemp?.activity+differenceIob[index].iobwithzerotemp?.activity,
 
                             }
                         }

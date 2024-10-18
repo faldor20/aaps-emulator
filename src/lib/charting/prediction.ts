@@ -167,7 +167,7 @@ export function setPrediction(predictions:Predictions,chart:EChartsType,results:
     const predictionOptions=createPredictionData(prediction);
     chart.setOption(predictionOptions);
     predictions[startTime.getTime()]=prediction;
-    
+    console.log("set prediction:",prediction);
 }
 
 /**
@@ -177,7 +177,7 @@ export function setPrediction(predictions:Predictions,chart:EChartsType,results:
  * @param results 
  * @param startTime 
  */
-export function updatePredictions(predictions:Predictions,chart:EChartsType,results:readonly DetermineBasalResultWithTime[],startTime:Date){
+export function updatePredictions(predictions:Predictions,chart:EChartsType,results:readonly DetermineBasalResultWithTime[]){
     Object.values(predictions).forEach(p=>{
     setPrediction(predictions,chart,results,p.startTime);
 

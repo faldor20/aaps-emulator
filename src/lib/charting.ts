@@ -69,7 +69,6 @@ export function main_chart(chartData: ChartData) {
         chart.setOption({ dataset: [dataset] });
         prediction.updatePredictions(predictions, chart, results, new Date());
         setAdjustedSmbs(chart,results);
-        
     });
     return {
         options: options_ret,
