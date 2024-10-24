@@ -53,7 +53,7 @@
     bind:value={profileState.iob_threshold_percent} 
 />
 <Folder title="Non Autoisf">
-<Slider label="ISF" min={0} max={300} bind:value={profileState.sens} />
+<!-- <Slider label="ISF" min={0} max={300} bind:value={profileState.sens} /> -->
 
 <!-- <Slider label="target" min={0} max={300} bind:value={profileState.target_bg} /> -->
 </Folder>

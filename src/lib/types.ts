@@ -207,7 +207,7 @@ export type EmulationResult = {
     autoISF_max:number;
     autoISF_min:number;
     iob_threshold_percent:number;
-    sens:number;
+    // sens:number;
 }
 export function overrideProfileInit(profile:AutoISFProfile):OverrideProfile{
     return {
@@ -225,6 +225,6 @@ export function overrideProfileInit(profile:AutoISFProfile):OverrideProfile{
         autoISF_max:profile.autoISF_max,
         autoISF_min:profile.autoISF_min,
         iob_threshold_percent:profile.iob_threshold_percent,
-        sens:profile.sens,
+        // sens:profile.sens,
     }
 }
