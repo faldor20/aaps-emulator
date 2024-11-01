@@ -1,31 +1,10 @@
 import type { GlucoseValue, AutoISFProfile, GlucoseStatus, IobData, CurrentTemp, MealData, AutoSensData, DetermineBasalData, BolusData } from "./types";
-export function parseLogLine(logLine: string): GlucoseValue | null {
-	const regex =
-		/GlucoseValue\(.*timestamp=(\d+).*value=(\d+\.\d+).*noise=(\d+\.\d+)/;
-	const match = logLine.match(regex);
-
-	if (match) {
-		const [, timestamp, value, noise] = match;
-		return {
-			timestamp: new Date(parseInt(timestamp, 10))
-				.toISOString()
-				.slice(0, 19)
-				.replace("T", " "),
-			value: parseFloat(value) / 18.018, // Convert mg/dL to mmol/L
-			noise: parseFloat(noise),
-		};
-	}
-
-	return null;
-}
-
 export function parseLog(log: string) {
-	const lines = log.split("\n");
-	const glucoseValues = lines
-		.map((line) => parseLogLine(line))
-		.filter((value) => value !== null);
-	return glucoseValues;
-}
+        return {
+            steps: parseDetermineBasalData(log),
+            bolusData: parseBolusData(log),
+        };
+    }
 
 export function parseBolusData(logContent: string): BolusData[] {
     const results: BolusData[] = [];

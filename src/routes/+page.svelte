@@ -1,10 +1,11 @@
 <script lang="ts">
+import { parseLog} from "$lib/readaapslog";
     import { importedLog, initializeAapsState } from "$lib/mainState";
     import MainView from "$lib/mainView.svelte";
     import { onMount } from "svelte";
     import { logDB, type LogMetadata } from "$lib/indexdb";
 
-    let savedLogs: LogMetadata[] = [];
+    let savedLogs: LogMetadata[] = $state([]);
 
     const refreshLogList = async () => {
         savedLogs = (await logDB.getAllLogNames()).toReversed();
@@ -18,6 +19,7 @@
     const handleFileSelect = async (event: Event) => {
         const files = (event.target as HTMLInputElement).files;
         if (files && files.length > 0) {
+            try{
             const sortedFiles = Array.from(files).sort((a: File, b: File) => 
                 a.name.localeCompare(b.name)
             );
@@ -33,18 +35,24 @@
             const name = sortedFiles.length > 1 
                 ? `${sortedFiles[0].name} - ${sortedFiles[sortedFiles.length - 1].name}` 
                 : sortedFiles[0].name;
-            
-            await logDB.addLog({ name, content: logContents });
-            await refreshLogList();
-            
-            initializeAapsState(logContents);
+            const parsedData = parseLog(logContents);
+            console.log("parsedData",parsedData);
+            await logDB.addLog({ name, content: JSON.stringify(parsedData) });
+            console.log("added log to db");
+            // await refreshLogList();
+          
+          
+                initializeAapsState(parsedData);
+            }catch(e){
+                console.error("Error initializing state",e);
+            }
         }
     };
 
     const loadSavedLog = async (name: string) => {
         try {
             const content = await logDB.getLogContent(name);
-            initializeAapsState(content);
+            initializeAapsState(JSON.parse(content));
         } catch (error) {
             console.error('Error loading log:', error);
             // Handle error appropriately

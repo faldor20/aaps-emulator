@@ -1,4 +1,3 @@
-import { parseBolusData, parseDetermineBasalData } from "./readaapslog";
 import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, EmulationResult, IobData, IobDataValue, OverrideProfile } from "./types";
 import { determineBasalUseProfileUnits } from "./aaps/determineBasal";
 import { atom, batched, computed, map, type ReadableAtom } from "nanostores";
@@ -6,12 +5,6 @@ import { calculateIOB } from "./aaps/iob/calculateIOB";
 import { generate } from "./aaps/iob";
 import { registerUpdateLifecycle } from "echarts";
 
-function parseLog(log: string) {
-    return {
-        steps: parseDetermineBasalData(log),
-        bolusData: parseBolusData(log),
-    };
-}
 
 function generateResults(steps: DetermineBasalData[]): DetermineBasalResultWithTime[] {
     const startTime = performance.now();
@@ -24,7 +17,8 @@ function generateResults(steps: DetermineBasalData[]): DetermineBasalResultWithT
     console.log(`Time taken calculating results: ${endTime - startTime} milliseconds`);
     return res;
 }
-export const importedLog = atom<string | undefined>(undefined);
+
+export const importedLog = atom<boolean>(false);
 export const profileOverrideConfig = atom<OverrideProfile | undefined>(undefined);
 export const overriddenStep = atom<DetermineBasalData | undefined>(undefined);
 export const steps = atom<DetermineBasalData[]>([]);
@@ -241,11 +235,10 @@ export const results: ReadableAtom<EmulationResult[]> = computed([steps, overrid
 
 
 
-export function initializeAapsState(log: string) {
-    const { steps: logSteps, bolusData: logBolusData } = parseLog(log);
-    importedLog.set(log);
+export function initializeAapsState({steps:logSteps,bolusData:logBolusData}:{steps:DetermineBasalData[],bolusData:BolusData[]}) {
+
+    importedLog.set(true);
     steps.set(logSteps);
     bolusData.set(logBolusData);
     is_mg_dl.set(logSteps[0]?.profile.out_units !== "mmol/L");
-
 }

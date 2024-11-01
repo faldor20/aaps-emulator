@@ -49,7 +49,7 @@ class LogDatabase {
                 const names = request.result.map(name => ({ name: name as string }));
                 resolve(names);
             };
-            request.onerror = () => reject(request.error);
+            request.onerror = () => reject({error:request.error,msg:"Error getting all log names"});
         });
     }
 
@@ -68,7 +68,7 @@ class LogDatabase {
                     reject(new Error('Log not found'));
                 }
             };
-            request.onerror = () => reject(request.error);
+            request.onerror = () => reject({error:request.error,msg:"Error getting log content"});
         });
     }
 
@@ -76,6 +76,7 @@ class LogDatabase {
         if (!this.db) throw new Error('Database not initialized');
 
         const currentLogs = await this.getAllLogNames();
+        
         if (currentLogs.length >= this.maxLogs) {
             // Remove oldest logs to maintain max limit
             const logsToRemove = currentLogs.slice(0, currentLogs.length - this.maxLogs + 1);
@@ -85,10 +86,10 @@ class LogDatabase {
         return new Promise((resolve, reject) => {
             const transaction = this.db!.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
-            const request = store.add(log);
+            const request = store.put(log);
 
             transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error);
+            transaction.onerror = () => reject({error:transaction.error,msg:"Error adding log"});
         });
     }
 
@@ -104,7 +105,7 @@ class LogDatabase {
             });
 
             transaction.oncomplete = () => resolve();
-            transaction.onerror = () => reject(transaction.error);
+            transaction.onerror = () => reject({error:transaction.error,msg:"Error deleting logs"});
         });
     }
 
