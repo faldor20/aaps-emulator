@@ -23,6 +23,7 @@ function makeLabelwithStalk(label: string, width: number, stalkLength: number) {
 }
 function setAdjustedSmbs(chart:EChartsType,results: readonly EmulationResult[]) {
     const smb_data = results.filter(b => (b.emulated?.units??0)>0).map(b => ({ time: b.emulated?.deliverAt.toISOString(), units: b.emulated?.units }));
+    console.log("adjusted smb_data",smb_data);
     chart.setOption({
         dataset: [
             {
@@ -67,6 +68,7 @@ export function main_chart(chartData: ChartData) {
         const dataset = resultDataSource(results);
         chart.setOption({ dataset: [dataset] });
         prediction.updatePredictions(predictions, chart, results.map(r=>r.emulated??r.og), new Date());
+      
         setAdjustedSmbs(chart,results);
     });
     return {
@@ -190,7 +192,7 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
             type: 'value',
             name: bg_units,
             min: 0,
-            max: is_mg_dl ? 300 : 20,
+            max: is_mg_dl ? 400 : 20,
 
             position: 'left',
             axisLabel: {
@@ -202,7 +204,7 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
             name: 'U',
             position: 'right',
             min: -2,
-            max: 8,
+            max: 15,
             axisLabel: {
                 formatter: '{value} U'
             },
