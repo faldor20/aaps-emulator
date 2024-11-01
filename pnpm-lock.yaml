@@ -11,6 +11,9 @@ importers:
 
   .:
     dependencies:
+      dexie:
+        specifier: ^4.0.9
+        version: 4.0.9
       moment:
         specifier: ^2.30.1
         version: 2.30.1
@@ -466,6 +469,9 @@ packages:
 
   devalue@5.1.1:
     resolution: {integrity: sha512-maua5KUiapvEwiEAe+XnlZ3Rh0GD+qI1J/nb9vrJc3muPXvcF/8gXYTWF76+5DAqHyDUtOIImEuo0YKE9mshVw==}
+
+  dexie@4.0.9:
+    resolution: {integrity: sha512-VQG1huEVSAdDZssb9Bb9mFy+d3jAE0PT4d1nIRYlT46ip1fzbs1tXi0SlUayRDgV3tTbJG8ZRqAo2um49gtynA==}
 
   echarts@5.5.1:
     resolution: {integrity: sha512-Fce8upazaAXUVUVsjgV6mBnGuqgO+JNDlcgF79Dksy4+wgGpQB2lmYoO4TSweFg/mZITdpGHomw/cNBJZj1icA==}
@@ -1055,6 +1061,8 @@ snapshots:
   deepmerge@4.3.1: {}
 
   devalue@5.1.1: {}
+
+  dexie@4.0.9: {}
 
   echarts@5.5.1:
     dependencies:

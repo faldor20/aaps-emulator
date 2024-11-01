@@ -228,3 +228,12 @@ export function overrideProfileInit(profile:AutoISFProfile):OverrideProfile{
         // sens:profile.sens,
     }
 }
+
+export type InsulinConfig = {
+    dia:number;
+    peak:number;
+    curve:string;
+    useCustomPeakTime:boolean;
+    insulinPeakTime:number;
+}
+export type Preset = "lyumjev" | "ultra-rapid/fiasp" | "rapid/novolog/humalog" | "custom";

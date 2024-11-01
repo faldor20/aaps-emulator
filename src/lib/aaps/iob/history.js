@@ -435,6 +435,7 @@ function calcTempTreatments (inputs, zeroTempDuration) {
 
     var splitterEvents = [];
 
+    
     for (let o of profile_data.basalprofile) {
         let splitterEvent = {
             type: 'recurring',

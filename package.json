@@ -23,6 +23,7 @@
   },
   "type": "module",
   "dependencies": {
+    "dexie": "^4.0.9",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.46",
     "nanostores": "^0.11.3",

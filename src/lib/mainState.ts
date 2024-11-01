@@ -1,4 +1,4 @@
-import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, EmulationResult, IobData, IobDataValue, OverrideProfile } from "./types";
+import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, EmulationResult, InsulinConfig, InsulinConfig, IobData, IobDataValue, OverrideProfile } from "./types";
 import { determineBasalUseProfileUnits } from "./aaps/determineBasal";
 import { atom, batched, computed, map, type ReadableAtom } from "nanostores";
 import { calculateIOB } from "./aaps/iob/calculateIOB";
@@ -24,7 +24,13 @@ export const overriddenStep = atom<DetermineBasalData | undefined>(undefined);
 export const steps = atom<DetermineBasalData[]>([]);
 export const bolusData = atom<BolusData[]>([]);
 export const is_mg_dl = atom(true);
-
+export const insulinConfig = atom<InsulinConfig>({
+    dia:9,
+    peak:55,
+    curve:"ultra-rapid",
+    useCustomPeakTime:false,
+    insulinPeakTime:55
+});
 
 
 function generateIOB(treatments: any[], currentTime: Date, profile: {}) {
@@ -47,13 +53,9 @@ function generateIOB(treatments: any[], currentTime: Date, profile: {}) {
     return generate(inputs, false, treatments2);
 }
 
-function calculateEmulatedIOB(basalProfile: any, currentTime: Date, emulated_treatments: any[]): IobData {
+function calculateEmulatedIOB(insulinConfig:InsulinConfig,basalProfile: any, currentTime: Date, emulated_treatments: any[]): IobData {
     const iobProfile: Profile = {
-        dia: 9,
-        peak: 55,
-        useCustomPeakTime: false,
-        insulinPeakTime: 55,
-        curve: "ultra-rapid",
+         ...insulinConfig,
         basalprofile: basalProfile
     }
     const embulated_iob = generateIOB(emulated_treatments, currentTime, iobProfile);
@@ -142,10 +144,20 @@ export const results: ReadableAtom<EmulationResult[]> = computed([steps, overrid
                             rate: step.profile.current_basal
                         }
                     ]
-                    const newIob = calculateEmulatedIOB(basalProfile, new Date(step.iobData[0].time), emulated_treatments);
-                    const ogIob = calculateEmulatedIOB(basalProfile, new Date(step.iobData[0].time), og_treatments);
-                    console.log("newIob", newIob[0].iob);
-                    console.log("ogIob", ogIob[0].iob);
+                    const newIob = calculateEmulatedIOB(insulinConfig.get(),basalProfile, new Date(step.iobData[0].time), emulated_treatments);
+                    const ogIob = calculateEmulatedIOB(insulinConfig.get(),basalProfile, new Date(step.iobData[0].time), og_treatments);
+                   
+                    if(ogIob[0]!= step.iobData[0]){
+                        //This should keep happpening until we add basal changes into the emulation. 
+                        
+                        console.log("stepIob", step.iobData[0].iob);
+                        console.log("newIob", newIob[0].iob);
+                        console.log("ogIob", ogIob[0].iob);
+                        console.log("stepIob-10", step.iobData[10].iob);
+                        console.log("newIob-10", newIob[10].iob);
+                        console.log("ogIob-10", ogIob[10].iob);
+                    }
+                    
                     //TODO: calculte activity properly
                     //TODO: use the activity for the new and original 
                     // iob to calulate the original and current BGimpact then adjust the reading by that amount
@@ -235,10 +247,11 @@ export const results: ReadableAtom<EmulationResult[]> = computed([steps, overrid
 
 
 
-export function initializeAapsState({steps:logSteps,bolusData:logBolusData}:{steps:DetermineBasalData[],bolusData:BolusData[]}) {
+export function initializeAapsState({steps:logSteps,bolusData:logBolusData}:{steps:DetermineBasalData[],bolusData:BolusData[]}, insulinConf:InsulinConfig) {
 
     importedLog.set(true);
     steps.set(logSteps);
     bolusData.set(logBolusData);
     is_mg_dl.set(logSteps[0]?.profile.out_units !== "mmol/L");
+    insulinConfig.set(insulinConf);
 }

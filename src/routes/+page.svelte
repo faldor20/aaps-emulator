@@ -4,14 +4,24 @@ import { parseLog} from "$lib/readaapslog";
     import MainView from "$lib/mainView.svelte";
     import { onMount } from "svelte";
     import { logDB, type LogMetadata } from "$lib/indexdb";
-
+    import StartupSettings from "$lib/startupSettings.svelte";
+    import type { InsulinConfig } from "$lib/types";
+    import { insulinConfigDB } from "$lib/indexDB/indexDB";
     let savedLogs: LogMetadata[] = $state([]);
-
+    let insulinConfig = $state<InsulinConfig>({
+        dia:9,
+        peak:55,
+        curve:"ultra-rapid",
+        useCustomPeakTime:false,
+        insulinPeakTime:55
+    });
+ 
     const refreshLogList = async () => {
         savedLogs = (await logDB.getAllLogNames()).toReversed();
     };
 
     onMount(async () => {
+      
         await logDB.initialize();
         await refreshLogList();
     });
@@ -42,7 +52,7 @@ import { parseLog} from "$lib/readaapslog";
             // await refreshLogList();
           
           
-                initializeAapsState(parsedData);
+                initializeAapsState(parsedData, $state.snapshot(insulinConfig));
             }catch(e){
                 console.error("Error initializing state",e);
             }
@@ -52,7 +62,7 @@ import { parseLog} from "$lib/readaapslog";
     const loadSavedLog = async (name: string) => {
         try {
             const content = await logDB.getLogContent(name);
-            initializeAapsState(JSON.parse(content));
+            initializeAapsState(JSON.parse(content), $state.snapshot(insulinConfig));
         } catch (error) {
             console.error('Error loading log:', error);
             // Handle error appropriately
@@ -72,7 +82,7 @@ import { parseLog} from "$lib/readaapslog";
         <div>
             <p>Please select one or more log files:</p>
             <input type="file" accept=".log" on:change={handleFileSelect} multiple />
-            
+            <StartupSettings bind:insulinConfig />
             {#if savedLogs.length > 0}
                 <div class="saved-logs">
                     <div class="saved-logs-header">
@@ -95,6 +105,15 @@ import { parseLog} from "$lib/readaapslog";
                     </ul>
                 </div>
             {/if}
+
+            <h2>Using the emulator:</h2>
+            <p>1. select your log files (they must be the logs, not zip files, extract the logs from the zip files for older logs)</p>
+            <p> Now you're looking at the graph of your data</p>
+            <br> Click any data point to show the calculation and preditions at ithat point<br>
+            Drag the pink line to a point. all points after that will be emulated.<br>
+            Adjust the settings in the box to see how your iob and smb would have been different if you had been using a different settings.
+            <br>
+        
         </div>
     {/if}
 </div>
@@ -137,5 +156,9 @@ import { parseLog} from "$lib/readaapslog";
 
     .cleanup-button:hover {
         background-color: #e0e0e0;
+    }
+    StartupSettings{
+        margin-top: 1em;
+        max-width: 10em;
     }
 </style>
