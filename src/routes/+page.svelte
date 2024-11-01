@@ -10,15 +10,27 @@
    
   });
 
-  const handleFileSelect = (event:any) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const log = e.target?.result as string;
-        initializeAapsState(log);
-      };
-      reader.readAsText(file);
+  const handleFileSelect = async (event: Event) => {
+    const files = (event.target as HTMLInputElement).files;
+    if (files && files.length > 0) {
+      // Sort files by name
+      const sortedFiles = Array.from(files).sort((a: File, b: File) => 
+        a.name.localeCompare(b.name)
+      );
+      
+     
+      
+      // Read files sequentially using Promise.all
+      const logs = await Promise.all(
+        sortedFiles.map(async (file) => {
+          const text = await file.text();
+          return text;
+        })
+      );
+
+      const logContents = logs.join('\n');
+      // Combine all logs and initialize state
+      initializeAapsState(logContents);
     }
   };
 </script>
@@ -28,8 +40,8 @@
     <MainView  />
   {:else}
     <div>
-        <p>Please select a log file:</p>
-        <input type="file" accept=".log" on:change={handleFileSelect} />
+        <p>Please select one or more log files:</p>
+        <input type="file" accept=".log" on:change={handleFileSelect} multiple />
     </div>
   {/if}
 
