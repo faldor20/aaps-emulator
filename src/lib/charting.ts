@@ -125,6 +125,15 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
     const smb_data = bolusData.filter(b => b.type === "SMB").map(b => ({ time: new Date(b.timestamp).toISOString(), units: b.amount }));
     const bg_units=is_mg_dl? "mg/dL": "mmol/L";
 
+    let max_bg= 0; 
+    let max_iob= 0; 
+    // biome-ignore lint/complexity/noForEach: <explanation>
+    results.forEach(v=>{
+        const  result=v.emulated ?? v.og;
+        max_bg = (result).bg > max_bg ? (result).bg : max_bg;
+        max_iob = (result).IOB > max_iob ? (result).IOB : max_iob ;
+    } );
+
     chart.on('finished', () => window.dispatchEvent(new Event('echarts.finished')));
     //TOOD: THis is obviously a hack...
     let updateTimer: number | null = null;
@@ -192,7 +201,7 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
             type: 'value',
             name: bg_units,
             min: 0,
-            max: is_mg_dl ? 400 : 20,
+            max: max_bg*1.3,
 
             position: 'left',
             axisLabel: {
@@ -203,12 +212,23 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
             type: 'value',
             name: 'U',
             position: 'right',
-            min: -2,
-            max: 15,
+            min: -1.5,
+            max: max_iob*1.3,
             axisLabel: {
                 formatter: '{value} U'
             },
             id: 'units'
+        },
+        {
+            type: 'value',
+            name: 'Activity',
+            position: 'right',
+            min: 0,
+            max: 0.15,
+            axisLabel: {
+                formatter: '{value} Activity'
+            },
+            id: 'activity'
         }
         ],
 
@@ -283,12 +303,13 @@ export function main_chart_options({ results, bolusData, is_mg_dl, chart }: Char
             },
             {name:"Insulin activity",
             type:'line',
+            symbol:'none',
             color:'orange',
             encode:{
                 x:'time',
                 y:'activity',
             },
-            yAxisId:'units',
+            yAxisId:'activity',
             datasetId:"result-data",
             },
             {
