@@ -1,4 +1,4 @@
-import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, EmulationResult, InsulinConfig, InsulinConfig, IobData, IobDataValue, OverrideProfile } from "./types";
+import type { AutoISFProfile, BolusData, DetermineBasalData, DetermineBasalResult, DetermineBasalResultWithTime, EmulationResult, InsulinConfig, InsulinConfig, IobData, IobDataValue, OverrideProfile, OverrideProfileConfig } from "./types";
 import { determineBasalUseProfileUnits } from "./aaps/determineBasal";
 import { atom, batched, computed, map, type ReadableAtom } from "nanostores";
 import { calculateIOB } from "./aaps/iob/calculateIOB";
@@ -115,14 +115,11 @@ export const results: ReadableAtom<EmulationResult[]> = computed([steps, overrid
             if (inOverrideRange && !firstStep) {
                 if (lastStep==null){ throw new Error("lastStep is null");}
                 //stop overriding if any of these values change
-                if (profileOverrideConfig.target_bg!==undefined && lastStep?.profile.target_bg !== step.profile.target_bg) {
-                    shouldOverride = false;
-                }
-                if (profileOverrideConfig.bgAccel_ISF_weight!==undefined && lastStep?.profile.bgAccel_ISF_weight !== step.profile.bgAccel_ISF_weight) {
-                    shouldOverride = false;
-                }
-                if (profileOverrideConfig.sens!==undefined && lastStep?.profile.sens !== step.profile.sens) {
-                    shouldOverride = false;
+                for (const key in profileOverrideConfig) {
+                    if (profileOverrideConfig[key as keyof OverrideProfileConfig] !== undefined && lastStep?.profile[key as keyof AutoISFProfile] !== step.profile[key as keyof AutoISFProfile]) {
+                        shouldOverride = false;
+                        break;
+                    }
                 }
             }
             lastStep = step;
@@ -149,7 +146,6 @@ export const results: ReadableAtom<EmulationResult[]> = computed([steps, overrid
                    
                     if(ogIob[0]!= step.iobData[0]){
                         //This should keep happpening until we add basal changes into the emulation. 
-                        
                         console.log("stepIob", step.iobData[0].iob);
                         console.log("newIob", newIob[0].iob);
                         console.log("ogIob", ogIob[0].iob);

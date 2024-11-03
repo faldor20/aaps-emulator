@@ -113,6 +113,8 @@ import { parseLog} from "$lib/readaapslog";
             Drag the pink line to a point. all points after that will be emulated.<br>
             Adjust the settings in the box to see how your iob and smb would have been different if you had been using a different settings.
             <br>
+            <b>Note:</b> The Emulation will stop if you have changed the target bg, isf or bg_accel_isf_weight and those values change in the original data. 
+            This is becasue it's not clear what the emulation should do given you have overidden these settings when they now have different values.
         
         </div>
     {/if}

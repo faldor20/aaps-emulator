@@ -67,7 +67,7 @@
   }
   .chart{
     flex:1;
-    min-width: 80%;
+    min-width: 75%;
     max-width: 100%;
     min-height: 90%;
 

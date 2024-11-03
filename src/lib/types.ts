@@ -192,8 +192,8 @@ export type EmulationResult = {
 }
 
    //We don't want to override anything accidentally so we only override the values we expose for editing.
-   export type OverrideProfile={
-    // target_bg:number;
+   export type OverrideProfileConfig={
+    target_bg:number;
     bgAccel_ISF_weight:number;
     pp_ISF_weight:number;
     lower_ISFrange_weight:number;
@@ -207,11 +207,13 @@ export type EmulationResult = {
     autoISF_max:number;
     autoISF_min:number;
     iob_threshold_percent:number;
-    // sens:number;
+    sens:number;
 }
-export function overrideProfileInit(profile:AutoISFProfile):OverrideProfile{
+export type OverrideProfile=Partial<OverrideProfileConfig>
+
+export function overrideProfileInit(profile:AutoISFProfile):OverrideProfileConfig{
     return {
-        // target_bg:profile.target_bg,
+  
         bgAccel_ISF_weight:profile.bgAccel_ISF_weight,
         pp_ISF_weight:profile.pp_ISF_weight,
         lower_ISFrange_weight:profile.lower_ISFrange_weight,
@@ -225,7 +227,8 @@ export function overrideProfileInit(profile:AutoISFProfile):OverrideProfile{
         autoISF_max:profile.autoISF_max,
         autoISF_min:profile.autoISF_min,
         iob_threshold_percent:profile.iob_threshold_percent,
-        // sens:profile.sens,
+        target_bg:profile.target_bg,
+        sens:profile.sens,
     }
 }
 
