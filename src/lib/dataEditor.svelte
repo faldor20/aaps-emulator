@@ -55,6 +55,9 @@
 <ResetWrapper resetValue={()=>{ profileState.bgAccel_ISF_weight=profile.bgAccel_ISF_weight;}} >
 <Slider label="BG Accel ISF Weight" min={0} max={1} step={0.01} bind:value={profileState.bgAccel_ISF_weight} />
 </ResetWrapper>
+<ResetWrapper resetValue={()=>{ profileState.bgBrake_ISF_weigth=profile.bgBrake_ISF_weight;}} >
+<Slider label="BG Brake ISF Weight" min={0} max={1} step={0.01} bind:value={profileState.bgBrake_ISF_weight} />
+</ResetWrapper>
 <ResetWrapper resetValue={()=>{ profileState.pp_ISF_weight=profile.pp_ISF_weight;}} >
 <Slider label="PP ISF Weight" min={0} max={1} step={0.01} bind:value={profileState.pp_ISF_weight} />
 </ResetWrapper>

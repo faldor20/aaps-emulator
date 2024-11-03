@@ -195,6 +195,7 @@ export type EmulationResult = {
    export type OverrideProfileConfig={
     target_bg:number;
     bgAccel_ISF_weight:number;
+    bgBrake_ISF_weight: number;
     pp_ISF_weight:number;
     lower_ISFrange_weight:number;
     higher_ISFrange_weight:number;
@@ -215,6 +216,7 @@ export function overrideProfileInit(profile:AutoISFProfile):OverrideProfileConfi
     return {
   
         bgAccel_ISF_weight:profile.bgAccel_ISF_weight,
+        bgBrake_ISF_weight: profile.bgBrake_ISF_weight,
         pp_ISF_weight:profile.pp_ISF_weight,
         lower_ISFrange_weight:profile.lower_ISFrange_weight,
         higher_ISFrange_weight:profile.higher_ISFrange_weight,
