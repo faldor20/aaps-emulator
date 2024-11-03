@@ -29,35 +29,67 @@ import { parseLog} from "$lib/readaapslog";
     const handleFileSelect = async (event: Event) => {
         const files = (event.target as HTMLInputElement).files;
         if (files && files.length > 0) {
-            try{
-            const sortedFiles = Array.from(files).sort((a: File, b: File) => 
-                a.name.localeCompare(b.name)
-            );
-            
-            const logs = await Promise.all(
-                sortedFiles.map(async (file) => {
-                    const text = await file.text();
-                    return text;
-                })
-            );
+            try {
+                // Convert FileList to array and sort
+                const fileArray = Array.from(files);
+                let allFiles: File[] = [];
+                
+                // Process each file, handling zips separately
+                for (const file of fileArray) {
+                    if (file.name.endsWith('.zip')) {
+                        // Handle zip files
+                        const zipFiles = await extractZipFiles(file);
+                        allFiles.push(...zipFiles);
+                    } else {
+                        allFiles.push(file);
+                    }
+                }
+                
+                // Sort all files by name
+                const sortedFiles = allFiles.sort((a, b) => a.name.localeCompare(b.name));
+                
+                const logs = await Promise.all(
+                    sortedFiles.map(async (file) => {
+                        const text = await file.text();
+                        return text;
+                    })
+                );
 
-            const logContents = logs.join('\n');
-            const name = sortedFiles.length > 1 
-                ? `${sortedFiles[0].name} - ${sortedFiles[sortedFiles.length - 1].name}` 
-                : sortedFiles[0].name;
-            const parsedData = parseLog(logContents);
-            console.log("parsedData",parsedData);
-            await logDB.addLog({ name, content: JSON.stringify(parsedData) });
-            console.log("added log to db");
-            // await refreshLogList();
-          
-          
-                initializeAapsState(parsedData, $state.snapshot(insulinConfig));
-            }catch(e){
-                console.error("Error initializing state",e);
+                const logContents = logs.join('\n');
+                const name = sortedFiles.length > 1 
+                    ? `${sortedFiles[0].name} - ${sortedFiles[sortedFiles.length - 1].name}` 
+                    : sortedFiles[0].name;
+                const parsedData = parseLog(logContents);
+                console.log("parsedData",parsedData);
+                await logDB.addLog({ name, content: JSON.stringify(parsedData) });
+                console.log("added log to db");
+                // await refreshLogList();
+              
+              
+                    initializeAapsState(parsedData, $state.snapshot(insulinConfig));
+                } catch(e) {
+                    console.error("Error initializing state", e);
+                }
             }
         }
-    };
+    
+
+    // Add this helper function to handle zip extraction
+    async function extractZipFiles(zipFile: File): Promise<File[]> {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        const contents = await zip.loadAsync(zipFile);
+        const files: File[] = [];
+
+        for (const [filename, file] of Object.entries(contents.files)) {
+            if (!file.dir) {
+                const content = await file.async('blob');
+                files.push(new File([content], filename));
+            }
+        }
+
+        return files;
+    }
 
     const loadSavedLog = async (name: string) => {
         try {
@@ -80,8 +112,8 @@ import { parseLog} from "$lib/readaapslog";
         <MainView />
     {:else}
         <div>
-            <p>Please select one or more log files:</p>
-            <input type="file" accept=".log" on:change={handleFileSelect} multiple />
+            <p>Please select one or more log files/zips of log files:</p>
+            <input type="file" on:change={handleFileSelect} multiple />
             <StartupSettings bind:insulinConfig />
             {#if savedLogs.length > 0}
                 <div class="saved-logs">
