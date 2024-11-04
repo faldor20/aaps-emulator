@@ -58,22 +58,24 @@ export function determineBasalUseProfileUnits(determineBasalData: DetermineBasal
   result.bg = convert_bg(result.bg,determineBasalData.profile);
   result.eventualBG = convert_bg(result.eventualBG,determineBasalData.profile);
   result.targetBG = convert_bg(result.targetBG,determineBasalData.profile);
-  result.predBGs.IOB = result.predBGs.IOB.map(value => convert_bg(value,determineBasalData.profile));
-  result.predBGs.ZT = result.predBGs.ZT.map(value => convert_bg(value,determineBasalData.profile));
-  result.predBGs.UAM = result.predBGs.UAM?.map(value => convert_bg(value,determineBasalData.profile));
+  if (result.predBGs){
+  result.predBGs.IOB = result.predBGs?.IOB?.map(value => convert_bg(value,determineBasalData.profile));
+  result.predBGs.ZT = result.predBGs?.ZT?.map(value => convert_bg(value,determineBasalData.profile));
+  result.predBGs.UAM = result.predBGs?.UAM?.map(value => convert_bg(value,determineBasalData.profile));
+  }
   
   
   return result;
 }
-
+const oldErrorLog=console.error;
+const oldLog=console.log;
 export function determineBasal(determineBasalData: DetermineBasalData): DetermineBasalResult {
   //Determinbasal outputs a ton of logging garbage so we will divert all logs here
-  // const oldErrorLog=console.error;
-  // console.error=()=>{}
-  // const oldLog=console.error;
-  // console.log=()=>{}
+ 
+  console.error=()=>{}
+  console.log=()=>{}
  const result=determineBasalWrapper(determineBasalData.glucoseStatus, determineBasalData.currentTemp, determineBasalData.iobData, determineBasalData.profile, determineBasalData.autosensData, determineBasalData.mealData, tempBasalFunctions, determineBasalData.microBolusAllowed, determineBasalData.reservoirData, determineBasalData.currentTime, determineBasalData.flatBGsDetected);
-//  console.error=oldErrorLog;
-//  console.log=oldLog;
+ console.error=oldErrorLog;
+ console.log=oldLog;
  return result
 }
