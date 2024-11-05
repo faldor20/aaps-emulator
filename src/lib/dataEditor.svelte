@@ -4,21 +4,21 @@
     import { overrideProfileInit, type AutoISFProfile, type OverrideProfile, type OverrideProfileConfig } from './types';
     import ResetWrapper from './tweakpane/resetWrapper.svelte';
     let {profile,onDataSaved}:{profile:AutoISFProfile,onDataSaved:(profile:OverrideProfile)=>void} = $props();
-    
+
     let profileState:OverrideProfileConfig=$state(overrideProfileInit(profile));
 
     let debounceTimer: number | undefined;
 
     function removeUnchangedFields(original: OverrideProfileConfig, modified: OverrideProfileConfig): OverrideProfile {
         const result: OverrideProfile = {};
-        
+
         // Type-safe way to iterate over OverrideProfile keys
         (Object.keys(modified) as Array<keyof OverrideProfile>).forEach(key => {
             if (modified[key] !== original[key]) {
                 result[key] = modified[key];
             }
         });
-        
+
         // Cast partial result back to OverrideProfile
         return result ;
     }
@@ -30,9 +30,9 @@
 
     $effect(() => {
         const currentProfileState = $state.snapshot(profileState);
-        
+
         clearTimeout(debounceTimer);
-        
+
         debounceTimer = setTimeout(() => {
             handleOnDataSaved();
         }, 500);
@@ -55,7 +55,7 @@
 <ResetWrapper resetValue={()=>{ profileState.bgAccel_ISF_weight=profile.bgAccel_ISF_weight;}} >
 <Slider label="BG Accel ISF Weight" min={0} max={1} step={0.01} bind:value={profileState.bgAccel_ISF_weight} />
 </ResetWrapper>
-<ResetWrapper resetValue={()=>{ profileState.bgBrake_ISF_weigth=profile.bgBrake_ISF_weight;}} >
+<ResetWrapper resetValue={()=>{ profileState.bgBrake_ISF_weight=profile.bgBrake_ISF_weight;}} >
 <Slider label="BG Brake ISF Weight" min={0} max={1} step={0.01} bind:value={profileState.bgBrake_ISF_weight} />
 </ResetWrapper>
 <ResetWrapper resetValue={()=>{ profileState.pp_ISF_weight=profile.pp_ISF_weight;}} >
@@ -63,11 +63,11 @@
 </ResetWrapper>
 
 <ResetWrapper resetValue={()=>{ profileState.lower_ISFrange_weight=profile.lower_ISFrange_weight;}} >
-<Slider label="Lower ISF Range Weight" min={0} max={2} step={0.01}  bind:value={profileState.lower_ISFrange_weight} />
+<Slider label="Lower ISF Range Weight" min={0} max={5} step={0.01}  bind:value={profileState.lower_ISFrange_weight} />
 </ResetWrapper>
 
-<ResetWrapper resetValue={()=>{ profileState.lower_ISFrange_weight=profile.lower_ISFrange_weight;}} >
-<Slider label="Higher ISF Range Weight" min={0} max={2} step={0.01} bind:value={profileState.higher_ISFrange_weight} />
+<ResetWrapper resetValue={()=>{ profileState.higher_ISFrange_weight=profile.higher_ISFrange_weight;}} >
+<Slider label="Higher ISF Range Weight" min={0} max={5} step={0.01} bind:value={profileState.higher_ISFrange_weight} />
 </ResetWrapper>
 <ResetWrapper resetValue={()=>{ profileState.dura_ISF_weight=profile.dura_ISF_weight;}} >
 <Slider label="Dura isf weight" min={0} max={5} step={0.01} bind:value={profileState.dura_ISF_weight} />
@@ -100,12 +100,12 @@
 <Slider label="Auto ISF min" min={0} max={1} step={0.01} bind:value={profileState.autoISF_min} />
 </ResetWrapper>
 <ResetWrapper resetValue={()=>{ profileState.iob_threshold_percent=profile.iob_threshold_percent;}} >
-<Slider 
-    label="IOB Threshold Percent" 
-    min={10} 
-    max={100} 
-    step={0.1} 
-    bind:value={profileState.iob_threshold_percent} 
+<Slider
+    label="IOB Threshold Percent"
+    min={10}
+    max={100}
+    step={0.1}
+    bind:value={profileState.iob_threshold_percent}
 />
 </ResetWrapper>
 
@@ -124,6 +124,3 @@
 }} />
 
 </div>
-
-
-
